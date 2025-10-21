@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vending Machines</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+      :root{ --bg:#0f1115; --card:#161a22; --text:#e6e8ee; --muted:#9aa3b2; --accent:#22c55e; }
+      *{ box-sizing:border-box }
+      body{ margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background:var(--bg); color:var(--text); }
+      header{ padding:16px 20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid #1f2430 }
+      header h1{ font-size:18px; margin:0; letter-spacing:0.2px }
+      main{ max-width:1100px; margin:0 auto; padding:20px }
+      .controls{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:16px }
+      button{ background:var(--accent); color:#08210f; border:0; padding:8px 12px; border-radius:8px; font-weight:600; cursor:pointer }
+      button[disabled]{ opacity:0.6; cursor:not-allowed }
+      .card{ background:var(--card); border:1px solid #1f2430; border-radius:12px; padding:16px }
+      .grid{ display:grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap:12px }
+      @media (min-width: 720px){ .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+      @media (min-width: 1040px){ .grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+      .muted{ color:var(--muted) }
+      .orders{ border-top:1px dashed #252b38; margin-top:8px; padding-top:6px; max-height:260px; overflow:auto }
+      .orders .header, .orders .order{ display:grid; grid-template-columns: minmax(0,1fr) 170px 60px; align-items:center; column-gap:12px; padding:4px 0; }
+      .orders .header{ position:sticky; top:0; background:#0f141d; z-index:1; color:#aab4c4; font-size:11px; letter-spacing:0.3px; text-transform:uppercase; border-bottom:1px solid #273045; margin-bottom:2px }
+      .orders .sale{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+      .orders .cost{ color:var(--muted); white-space:nowrap; text-align:right; overflow:hidden; text-overflow:ellipsis; }
+      .orders .stock{ color:var(--muted); white-space:nowrap; text-align:right }
+      .pill{ font-size:11px; background:#233041; color:#a7c5ff; padding:3px 6px; border-radius:999px }
+      .error{ color:#f87171; background:#2b1517; padding:8px 10px; border:1px solid #3a1b1d; border-radius:8px }
+      footer{ color:var(--muted); font-size:12px; text-align:center; padding:16px }
+      /* Map UI */
+      .cluster{ position:absolute; width:20px; height:20px; border-radius:50%; background:#1b8d4d; border:2px solid #0b3; color:#eafff3; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 1px #0b3; cursor:pointer }
+      .vm-marker{ position:absolute; width:10px; height:10px; border-radius:50%; background:#22c55e; border:1px solid #0b3; box-shadow:0 0 0 1px #0b3; cursor:pointer }
+      #mapWrap{ cursor: grab; }
+      #mapWrap.dragging{ cursor: grabbing; }
+      #popup{ position:absolute; display:none; min-width:280px; max-width:440px; background:#0f141d; border:1px solid #222a3a; border-radius:10px; padding:10px 12px; color:#e6e8ee; box-shadow:0 16px 30px rgba(0,0,0,0.5); z-index:5; backdrop-filter: blur(3px); }
+      #popup .hdr{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:6px }
+      #popup .title{ font-weight:700 }
+      #popup .hint{ color:var(--muted); margin-bottom:6px }
+      #popup .btn{ background:#233041; color:#a7c5ff; border:1px solid #2a3850; padding:4px 8px; border-radius:6px; cursor:pointer }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Vending Machines</h1>
+      <span id="serverName" class="muted"></span>
+    </header>
+    <main>
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px">
+          <div>
+            <strong>Map</strong>
+          </div>
+          <div class="controls" style="margin:0; gap:12px; align-items:stretch">
+            <div id="searchBox" style="position:relative">
+              <input id="search" type="text" placeholder="Search items…" style="height:34px; width:360px; border-radius:8px; border:1px solid #263043; background:#0f141c; color:#e6e8ee; padding:0 10px; outline:none" />
+              <div id="searchResults" style="display:none; position:absolute; right:0; top:38px; width:420px; max-height:380px; overflow:auto; background:#0f141d; border:1px solid #263043; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.4); z-index:6"></div>
+            </div>
+            <button id="mapReset">Reset</button>
+          </div>
+        </div>
+        <div id="mapWrap" style="position:relative;overflow:hidden;height:520px;border-radius:8px;border:1px solid #1f2430;background:#0c0f14">
+          <img id="mapImg" alt="Map" draggable="false" style="position:absolute;left:0;top:0;transform-origin: 0 0; user-select:none; -webkit-user-drag:none;" />
+          <div id="markerLayer" style="position:absolute;left:0;top:0;transform-origin: 0 0;"></div>
+          <div id="popup"></div>
+        </div>
+      </div>
+      <div class="controls">
+        <button id="refresh">Refresh</button>
+        <span id="status" class="muted">Loading…</span>
+      </div>
+      <div id="error" class="error" style="display:none"></div>
+      <div id="list" class="grid" style="display:none"></div>
+      <footer>
+        Data shown from Rust+ websocket.
+      </footer>
+    </main>
+    <script type="module">
+      const elList = document.getElementById('list');
+      const elStatus = document.getElementById('status');
+      const elError = document.getElementById('error');
+      const elRefresh = document.getElementById('refresh');
+      const elServerName = document.getElementById('serverName');
+      const elMapImg = document.getElementById('mapImg');
+      const elMarkerLayer = document.getElementById('markerLayer');
+      const elMapWrap = document.getElementById('mapWrap');
+      
+      const elMapReset = document.getElementById('mapReset');
+      const elPopup = document.getElementById('popup');
+      const elSearch = document.getElementById('search');
+      const elSearchResults = document.getElementById('searchResults');
+
+      function showError(msg){ elError.textContent = msg; elError.style.display='block'; }
+      function clearError(){ elError.textContent=''; elError.style.display='none'; }
+
+      function itemRow(o){
+        const itemLabel = o.itemName ? o.itemName : `Item ${o.itemId}`;
+        const currLabel = o.currencyName ? o.currencyName : `${o.currencyId}`;
+        const bp = o.itemIsBlueprint ? ' (BP)' : '';
+        const cbp = o.currencyIsBlueprint ? ' (BP)' : '';
+        const stock = (o.amountInStock != null) ? o.amountInStock : '';
+        return `<div class="order">
+          <div class="sale">${o.quantity} × ${itemLabel}${bp}</div>
+          <div class="cost">${o.costPerItem} × ${currLabel}${cbp}</div>
+          <div class="stock">${stock}</div>
+        </div>`;
+      }
+
+      function renderList(_data){ /* list hidden */ }
+
+      async function fetchInfo(){
+        try {
+          const res = await fetch('/api/info');
+          if (!res.ok) throw new Error('Failed to load server info');
+          const info = await res.json();
+          elServerName.textContent = `· ${info.name} · ${info.players}/${info.maxPlayers}`;
+        } catch {}
+      }
+
+      let mapMeta = null;
+      const state = { scale: 0.25, x: 0, y: 0, dragging: false, lastX: 0, lastY: 0, moved: false };
+      let rerenderPending = false;
+      function scheduleMarkerRerender(){ if (rerenderPending) return; rerenderPending = true; requestAnimationFrame(()=>{ rerenderPending=false; if (latestVending) renderMarkers(latestVending); }); }
+      function applyTransform(){
+        elMapImg.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+        elMarkerLayer.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+        scheduleMarkerRerender();
+      }
+      function resetView(){ state.scale = 0.25; state.x = 0; state.y = 0; applyTransform(); hidePopup(); }
+      elMapReset.addEventListener('click', resetView);
+      elMapImg.addEventListener('dragstart', (e) => e.preventDefault());
+      elMapWrap.addEventListener('contextmenu', (e) => e.preventDefault());
+      elMapWrap.addEventListener('mousedown', (e) => { if (e.target && e.target.closest('#popup')) return; state.dragging = true; state.moved=false; state.lastX=e.clientX; state.lastY=e.clientY; elMapWrap.classList.add('dragging'); elSearchResults.style.display='none'; });
+      window.addEventListener('mouseup', () => { state.dragging = false; elMapWrap.classList.remove('dragging'); });
+      window.addEventListener('mousemove', (e) => {
+        if (!state.dragging) return;
+        const dx = e.clientX - state.lastX; const dy = e.clientY - state.lastY;
+        state.lastX = e.clientX; state.lastY = e.clientY;
+        if (Math.abs(dx)>2 || Math.abs(dy)>2) state.moved = true;
+        state.x += dx; state.y += dy; applyTransform();
+      });
+      elMapWrap.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.1 : 0.9;
+        const prev = state.scale; state.scale = Math.min(3, Math.max(0.1, state.scale * factor));
+        const rect = elMapWrap.getBoundingClientRect();
+        const mx = e.clientX - rect.left; const my = e.clientY - rect.top;
+        state.x = mx - (mx - state.x) * (state.scale / prev);
+        state.y = my - (my - state.y) * (state.scale / prev);
+        applyTransform();
+      }, { passive: false });
+      function zoomToImagePoint(px, py, factor=1.5){ const newScale=Math.min(3,Math.max(0.1,state.scale*factor)); const rect=elMapWrap.getBoundingClientRect(); const cx=rect.width/2, cy=rect.height/2; state.scale=newScale; state.x=cx - px*newScale; state.y=cy - py*newScale; applyTransform(); }
+
+      function mapToPixel(m, meta){ const innerW=meta.width-2*meta.oceanMargin; const innerH=meta.height-2*meta.oceanMargin; const px=meta.oceanMargin + (m.x/meta.mapSize)*innerW; const pyInner=(m.y/meta.mapSize)*innerH; const py=meta.height - (meta.oceanMargin + pyInner); return {x:px,y:py}; }
+
+      let latestVending = null; let latestClusters = [];
+      function clusterMachines(vending){ const thresholdScreen=24; const tImg=thresholdScreen/state.scale; const clusters=[]; for (const m of vending.machines){ const pos=mapToPixel(m,mapMeta); let best=null,bd=0; for (const c of clusters){ const dx=c.x-pos.x, dy=c.y-pos.y, d=Math.hypot(dx,dy); if (d<=tImg && (!best || d<bd)){ best=c; bd=d; } } if (best){ const n=best.items.length; best.x=(best.x*n + pos.x)/(n+1); best.y=(best.y*n + pos.y)/(n+1); best.items.push(m);} else { clusters.push({x:pos.x,y:pos.y,items:[m]}); } } return clusters; }
+      function renderMarkers(vending){ if (!mapMeta) return; latestVending=vending; latestClusters=clusterMachines(vending); const markers=latestClusters.map((c,idx)=>{ if (c.items.length===1){ const m=c.items[0]; const title=m.name||`VM #${m.id}`; return `<div class=\"vm-marker\" data-id=\"${m.id}\" title=\"${title}\" style=\"left:${c.x-5}px;top:${c.y-5}px;\"></div>`; } else { return `<div class=\"cluster\" data-cluster=\"${idx}\" title=\"${c.items.length} vending machines\" style=\"left:${c.x-10}px;top:${c.y-10}px;\">${c.items.length}</div>`; } }).join(''); elMarkerLayer.innerHTML = markers; }
+
+      function showPopupFor(id){
+        elSearchResults.style.display='none';
+        if (!latestVending || !mapMeta) return;
+        const m = latestVending.machines.find(mm => String(mm.id)===String(id));
+        if (!m) return;
+        const pos=mapToPixel(m,mapMeta);
+        let html=`<div class=\"hdr\"><div class=\"title\">${m.name||('Vending Machine #'+m.id)}</div><span class=\"pill\">${m.outOfStock?'Out of stock':'Active'}</span></div>`;
+        html += `<div class=\"hint\">(${m.x.toFixed(0)}, ${m.y.toFixed(0)}) · ${m.sellOrders.length} orders</div>`;
+        html += `<div class=\"orders\"><div class=\"header\"><div>For Sale</div><div>Cost</div><div>Stock</div></div>` + m.sellOrders.map(itemRow).join('') + `</div>`;
+        elPopup.innerHTML=html;
+        const scale=state.scale; const x=pos.x*scale+state.x; const y=pos.y*scale+state.y; const wrapRect=elMapWrap.getBoundingClientRect();
+        const left=Math.max(8,Math.min(wrapRect.width-440,x+10)); const top=Math.max(8,Math.min(wrapRect.height-320,y-10));
+        elPopup.style.left=left+'px'; elPopup.style.top=top+'px'; elPopup.style.display='block';
+      }
+      function hidePopup(){ elPopup.style.display='none'; }
+
+      elMapWrap.addEventListener('click', (e)=>{ if (elPopup.contains(e.target)) return; elSearchResults.style.display='none'; const t=e.target; if (t && t.classList && t.classList.contains('vm-marker')){ if (state.moved){ state.moved=false; return; } const id=t.getAttribute('data-id'); showPopupFor(id); e.stopPropagation(); return; } else if (t && t.classList && t.classList.contains('cluster')){ if (state.moved){ state.moved=false; return; } const idx=Number(t.getAttribute('data-cluster')); const c=latestClusters[idx]; if (!c) return; const preview=c.items.slice(0,8).map(mi=>`<div><a href=\"#\" class=\"vm-link\" data-id=\"${mi.id}\">${mi.name || ('Vending Machine #'+mi.id)}</a></div>`).join(''); elPopup.innerHTML=`<div class=\"hdr\"><div class=\"title\">${c.items.length} vending machines</div><button id=\"zoomInBtn\" class=\"btn\">Zoom in</button></div><div class=\"hint\">Choose one:</div>${preview}`; const x=c.x*state.scale+state.x; const y=c.y*state.scale+state.y; const rect=elMapWrap.getBoundingClientRect(); elPopup.style.left=Math.max(8,Math.min(rect.width-440,x+10))+'px'; elPopup.style.top=Math.max(8,Math.min(rect.height-320,y-10))+'px'; elPopup.style.display='block'; const z=document.getElementById('zoomInBtn'); if (z) z.onclick=(ev)=>{ ev.preventDefault(); ev.stopPropagation(); zoomToImagePoint(c.x,c.y,1.6); }; return; } hidePopup(); });
+      elPopup.addEventListener('click', (e)=>{ const t=e.target; if (t && t.classList && t.classList.contains('vm-link')){ e.preventDefault(); e.stopPropagation(); const id=t.getAttribute('data-id'); showPopupFor(id); }});
+
+      // Simple client-side search across vending items
+      let searchIndex = [];
+      function buildSearchIndex(vending){
+        const entries = [];
+        for (const m of vending.machines){
+          for (const o of m.sellOrders){
+            entries.push({
+              machineId: m.id, name: m.name || (`Vending Machine #${m.id}`), x: m.x, y: m.y,
+              item: o.itemName || `Item ${o.itemId}`, currency: o.currencyName || `${o.currencyId}`,
+              quantity: o.quantity, cost: o.costPerItem, stock: (o.amountInStock!=null?o.amountInStock:''),
+              key: `${(o.itemName||'').toLowerCase()} ${(o.currencyName||'').toLowerCase()} ${(m.name||'').toLowerCase()}`
+            });
+          }
+        }
+        searchIndex = entries;
+      }
+
+      function renderSearchResults(q){
+        if (!q){ elSearchResults.style.display='none'; elSearchResults.innerHTML=''; return; }
+        const s = q.toLowerCase().trim();
+        const results = searchIndex.filter(e => e.key.includes(s)).slice(0, 40);
+        if (!results.length){ elSearchResults.style.display='none'; elSearchResults.innerHTML=''; return; }
+        elSearchResults.style.display='block';
+        elSearchResults.innerHTML = results.map(r => {
+          const sale = `${r.quantity} × ${r.item}`;
+          const price = `${r.cost} × ${r.currency}`;
+          const stock = r.stock!=='' ? ` · stock ${r.stock}` : '';
+          return `<a href="#" class="res" data-id="${r.machineId}" style="display:block;padding:8px 10px;border-bottom:1px solid #1f2635;text-decoration:none;color:#dfe7f3">`+
+            `<div style="display:flex;justify-content:space-between;gap:12px"><div style="white-space:normal">${sale}</div><div style="color:#aab4c4;white-space:nowrap">${price}${stock}</div></div>`+
+            `<div class="muted" style="font-size:11px;margin-top:2px">${r.name} · (${r.x.toFixed(0)}, ${r.y.toFixed(0)})</div>`+
+          `</a>`;
+        }).join('');
+      }
+
+      elSearch.addEventListener('input', () => renderSearchResults(elSearch.value));
+      elSearchResults.addEventListener('click', (e) => {
+        const a = e.target.closest('a.res');
+        if (!a) return;
+        e.preventDefault(); e.stopPropagation();
+        const id = a.getAttribute('data-id');
+        // focus map on machine and open popup
+        const m = latestVending && latestVending.machines.find(mm => String(mm.id)===String(id));
+        if (m){
+          const pos = mapToPixel(m, mapMeta);
+          zoomToImagePoint(pos.x, pos.y, 1.5);
+          showPopupFor(id);
+          elSearchResults.style.display='none';
+        }
+      });
+
+      function fitMapToViewport(){ if (!mapMeta) return; const rect=elMapWrap.getBoundingClientRect(); const scale=Math.min(rect.width/mapMeta.width, rect.height/mapMeta.height); state.scale=scale; state.x=(rect.width - mapMeta.width*scale)/2; state.y=(rect.height - mapMeta.height*scale)/2; applyTransform(); }
+      async function loadMap(){
+        try {
+          const res = await fetch('/api/map');
+          if (!res.ok) throw new Error('Failed to load map');
+          mapMeta = await res.json();
+          elMapImg.src = '/api/map.jpg';
+          elMapImg.onload = () => {
+            fitMapToViewport();
+            const factor = Math.min(Math.pow(1.1, 10), 3 / state.scale);
+            const cx = mapMeta.width / 2, cy = mapMeta.height / 2;
+            zoomToImagePoint(cx, cy, factor);
+          };
+        } catch {}
+      }
+      async function load(){ elRefresh.disabled=true; elStatus.textContent='Loading…'; clearError(); try { await fetchInfo(); const res=await fetch('/api/vending-machines'); if (!res.ok) throw new Error('Request failed'); const data=await res.json(); elStatus.textContent=`${data.count} vending machines`; renderList(data); renderMarkers(data); buildSearchIndex(data); renderSearchResults(elSearch.value); } catch (e) { showError(e.message||String(e)); elStatus.textContent='Failed to load'; } finally { elRefresh.disabled=false; } }
+      elRefresh.addEventListener('click', load);
+      loadMap().then(load); setInterval(load, 30000);
+    </script>
+  </body>
+  </html>
