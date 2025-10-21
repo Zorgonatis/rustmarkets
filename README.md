@@ -1,7 +1,7 @@
 Vending Machines
 ================
 
-Minimal web app to browse every vending machine on a Rust server using `@liamcottle/rustplus.js`. Includes an interactive map with clustering, searchable inventory, and a clean popup that shows “For Sale | Cost | Stock”.
+Minimal web app to browse every vending machine on a Rust server using `@liamcottle/rustplus.js`. Includes an interactive map with clustering and searchable inventory.
 
 Setup
 -----
@@ -21,8 +21,8 @@ You only need four values to run this app: `ip`, `port`, `playerId`, `playerToke
     ```json
     {
       "img": "",
-      "port": "28082",
-      "ip": "203.0.113.42",
+      "port": "696969",
+      "ip": "127.0.0.1",
       "name": "your-server-name",
       "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
       "type": "server",
