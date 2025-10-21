@@ -1,5 +1,6 @@
 Vending Machines
 ================
+<img width="1915" height="783" alt="image" src="https://github.com/user-attachments/assets/395f2a6d-dcdb-4029-8633-342128b9c9b0" />
 
 Minimal web app to browse every vending machine on a Rust server using `@liamcottle/rustplus.js`. Includes an interactive map with clustering and searchable inventory.
 
