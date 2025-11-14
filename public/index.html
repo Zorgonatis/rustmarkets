@@ -4,43 +4,566 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Vending Machines</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
     <style>
-      :root{ --bg:#0f1115; --card:#161a22; --text:#e6e8ee; --muted:#9aa3b2; --accent:#22c55e; }
-      *{ box-sizing:border-box }
-      body{ margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background:var(--bg); color:var(--text); }
-      header{ padding:16px 20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid #1f2430 }
-      header h1{ font-size:18px; margin:0; letter-spacing:0.2px }
-      main{ max-width:1100px; margin:0 auto; padding:20px }
-      .controls{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:16px }
-      button{ background:var(--accent); color:#08210f; border:0; padding:8px 12px; border-radius:8px; font-weight:600; cursor:pointer }
-      button[disabled]{ opacity:0.6; cursor:not-allowed }
-      .card{ background:var(--card); border:1px solid #1f2430; border-radius:12px; padding:16px }
-      .grid{ display:grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap:12px }
-      @media (min-width: 720px){ .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-      @media (min-width: 1040px){ .grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-      .muted{ color:var(--muted) }
-      .orders{ border-top:1px dashed #252b38; margin-top:8px; padding-top:6px; max-height:260px; overflow:auto }
-      .orders .header, .orders .order{ display:grid; grid-template-columns: minmax(0,1fr) 170px 60px; align-items:center; column-gap:12px; padding:4px 0; }
-      .orders .header{ position:sticky; top:0; background:#0f141d; z-index:1; color:#aab4c4; font-size:11px; letter-spacing:0.3px; text-transform:uppercase; border-bottom:1px solid #273045; margin-bottom:2px }
-      .orders .sale{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-      .orders .cost{ color:var(--muted); white-space:nowrap; text-align:right; overflow:hidden; text-overflow:ellipsis; }
-      .orders .stock{ color:var(--muted); white-space:nowrap; text-align:right }
-      .pill{ font-size:11px; background:#233041; color:#a7c5ff; padding:3px 6px; border-radius:999px }
-      .error{ color:#f87171; background:#2b1517; padding:8px 10px; border:1px solid #3a1b1d; border-radius:8px }
-      footer{ color:var(--muted); font-size:12px; text-align:center; padding:16px }
-      /* Map UI */
-      .cluster{ position:absolute; width:20px; height:20px; border-radius:50%; background:#1b8d4d; border:2px solid #0b3; color:#eafff3; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 1px #0b3; cursor:pointer }
-      .vm-marker{ position:absolute; width:10px; height:10px; border-radius:50%; background:#22c55e; border:1px solid #0b3; box-shadow:0 0 0 1px #0b3; cursor:pointer }
-      #mapWrap{ cursor: grab; }
-      #mapWrap.dragging{ cursor: grabbing; }
-      #popup{ position:absolute; display:none; min-width:280px; max-width:440px; background:#0f141d; border:1px solid #222a3a; border-radius:10px; padding:10px 12px; color:#e6e8ee; box-shadow:0 16px 30px rgba(0,0,0,0.5); z-index:5; backdrop-filter: blur(3px); }
-      #popup .hdr{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:6px }
-      #popup .title{ font-weight:700 }
-      #popup .hint{ color:var(--muted); margin-bottom:6px }
-      #popup .btn{ background:#233041; color:#a7c5ff; border:1px solid #2a3850; padding:4px 8px; border-radius:6px; cursor:pointer }
+      :root {
+        --bg: #0f1115;
+        --card: #161a22;
+        --text: #e6e8ee;
+        --muted: #9aa3b2;
+        --accent: #22c55e;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
+          Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        background: var(--bg);
+        color: var(--text);
+      }
+      header {
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid #1f2430;
+      }
+      header h1 {
+        font-size: 20px;
+        margin: 0;
+        letter-spacing: 0.2px;
+      }
+      main {
+        width: min(1400px, 100%);
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .dashboard-layout {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+      }
+      .map-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .sidebar {
+        width: 360px;
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        position: sticky;
+        top: 20px;
+        align-self: flex-start;
+      }
+      @media (max-width: 1180px) {
+        .dashboard-layout {
+          flex-direction: column;
+        }
+        .sidebar {
+          position: static;
+        }
+      }
+      .map-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .map-header .controls {
+        margin: 0;
+        gap: 12px;
+        align-items: center;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      button {
+        background: var(--accent);
+        color: #08210f;
+        border: 0;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button[disabled] {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid #1f2430;
+        border-radius: 12px;
+        padding: 16px;
+      }
+      .panel {
+        border-radius: 12px;
+        border: 1px solid #1f2430;
+        background: var(--card);
+        overflow: visible;
+      }
+      .panel-header {
+        width: 100%;
+        border: none;
+        background: #10131a;
+        color: var(--text);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .panel-header .chevron {
+        transition: transform 0.2s ease;
+      }
+      .panel[data-open="true"] .panel-header .chevron {
+        transform: rotate(180deg);
+      }
+      .panel-body {
+        padding: 16px;
+        overflow: visible;
+        position: relative;
+      }
+      .panel[data-open="false"] .panel-body {
+        display: none;
+      }
+      .panel-status {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 10px;
+      }
+      .form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .ghost {
+        background: transparent;
+        border: 1px solid #1f2430;
+        color: var(--text);
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 10px;
+      }
+      .field label {
+        font-size: 11px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .field input {
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid #1c2232;
+        background: #0f141d;
+        color: var(--text);
+        padding: 0 10px;
+        font-size: 13px;
+      }
+      .tag-input {
+        position: relative;
+      }
+      .tag-input input {
+        width: 100%;
+      }
+      .suggestions {
+        display: none;
+        position: absolute;
+        inset: auto 0 0;
+        margin-top: 6px;
+        background: #0f141d;
+        border: 1px solid #1f2635;
+        border-radius: 10px;
+        max-height: 260px;
+        overflow: auto;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+        z-index: 60;
+      }
+      .suggestions.open {
+        display: block;
+      }
+      .suggestions button {
+        width: 100%;
+        text-align: left;
+        border: none;
+        background: none;
+        color: #dfe7f3;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        cursor: pointer;
+      }
+      .suggestions button:hover {
+        background: #131826;
+      }
+      .suggestions small {
+        color: #8aa5d0;
+        font-size: 11px;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .chip {
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid #1f2635;
+        background: #131a27;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+      }
+      .chip button {
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .panel-list {
+        margin-top: 10px;
+        border-top: 1px solid #1a1f2e;
+        padding-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 260px;
+        overflow: auto;
+      }
+      .panel-list-header {
+        font-size: 11px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        color: #aab4c4;
+      }
+      .claim-row {
+        border: 1px solid #1f2430;
+        border-radius: 10px;
+        padding: 10px;
+        background: #0f141d;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .claim-row-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .claim-row-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .claim-row-actions {
+        margin-top: 6px;
+      }
+      .panel-link {
+        border: none;
+        background: #233041;
+        color: #a7c5ff;
+        padding: 4px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      .panel-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .machine-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px;
+        border-radius: 10px;
+        border: 1px solid #1f202f;
+        background: #0f141f;
+        align-items: flex-start;
+      }
+      .machine-row-details {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .machine-row-meta {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .machine-row-actions {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .pill--highlight {
+        background: #0c3724;
+        color: #8ef1b6;
+        border-color: #0a2f1d;
+      }
+      .pill--secondary {
+        background: #0f111a;
+        color: #8aa6d4;
+        border-color: #111722;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .error {
+        color: #f87171;
+        background: #2b1517;
+        padding: 8px 10px;
+        border: 1px solid #3a1b1d;
+        border-radius: 8px;
+      }
+      footer {
+        color: var(--muted);
+        font-size: 12px;
+        text-align: center;
+        padding: 16px;
+      }
+      .cluster {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #1b8d4d;
+        border: 2px solid #0b3;
+        color: #eafff3;
+        font-weight: 700;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 0 1px #0b3;
+        cursor: pointer;
+      }
+      .vm-marker {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #22c55e;
+        border: 1px solid #0b3;
+        box-shadow: 0 0 0 1px #0b3;
+        cursor: pointer;
+      }
+      .vm-marker.owned {
+        background: #a855f7;
+        border-color: #7c3aed;
+        box-shadow: 0 0 0 1px #7c3aed;
+      }
+      .market-tracking {
+        width: 100%;
+        background: #0a0e14;
+        border: 1px solid #1f2430;
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .tracking-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .tracking-title {
+        font-weight: 700;
+        font-size: 16px;
+      }
+      .tracking-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .tracking-filter select,
+      .tracking-filter input {
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid #1c2232;
+        background: #0f141d;
+        color: var(--text);
+        padding: 0 10px;
+        font-size: 13px;
+      }
+      .tracking-panels {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 12px;
+      }
+      .tracking-panel {
+        border: 1px solid #1f2430;
+        border-radius: 12px;
+        background: #111625;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .tracking-panel-header {
+        font-size: 12px;
+        letter-spacing: 0.2px;
+        text-transform: uppercase;
+        color: #8aa5d0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .tracking-panel-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 140px;
+      }
+      .tracking-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid #1a1f2e;
+        background: #0f141f;
+        align-items: center;
+      }
+      .tracking-row-details {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .tracking-row small {
+        color: #8aa5d0;
+        font-size: 11px;
+      }
+      .tracking-row-actions {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .tracking-warning {
+        display: none;
+        background: #2d1305;
+        border: 1px solid #f87171;
+        color: #fdd7d5;
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-weight: 600;
+      }
+      .manual-entry {
+        border-top: 1px solid #1f2430;
+        padding-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .manual-entry .field {
+        margin-bottom: 0;
+      }
+      .manual-entry .form-actions {
+        padding-top: 6px;
+      }
+      #mapWrap {
+        cursor: grab;
+      }
+      #mapWrap.dragging {
+        cursor: grabbing;
+      }
+      #popup {
+        position: absolute;
+        display: none;
+        min-width: 280px;
+        max-width: 440px;
+        background: #0f141d;
+        border: 1px solid #222a3a;
+        border-radius: 10px;
+        padding: 10px 12px;
+        color: #e6e8ee;
+        box-shadow: 0 16px 30px rgba(0, 0, 0, 0.5);
+        z-index: 5;
+        backdrop-filter: blur(3px);
+      }
+      #popup .hdr {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      #popup .title {
+        font-weight: 700;
+      }
+      #popup .hint {
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      #popup .btn {
+        background: #233041;
+        color: #a7c5ff;
+        border: 1px solid #2a3850;
+        padding: 4px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .popup-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 13px;
+      }
+      .popup-table th,
+      .popup-table td {
+        text-align: left;
+        padding: 4px 6px;
+        border-bottom: 1px solid #1f2535;
+      }
+      .popup-table th {
+        font-size: 11px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        color: #aab4c4;
+      }
+      .popup-sale {
+        color: #4ade80;
+        font-weight: 600;
+      }
+      .popup-cost {
+        color: #f87171;
+        font-weight: 600;
+      }
+      .popup-stock {
+        color: #c0c9d9;
+        text-align: right;
+      }
     </style>
   </head>
   <body>
@@ -49,37 +572,150 @@
       <span id="serverName" class="muted"></span>
     </header>
     <main>
-      <div class="card" style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px">
-          <div>
+      <div class="dashboard-layout">
+        <section class="map-column card">
+          <div class="map-header">
             <strong>Map</strong>
-          </div>
-          <div class="controls" style="margin:0; gap:12px; align-items:stretch">
-            <div id="searchBox" style="position:relative">
-              <input id="search" type="text" placeholder="Search items…" style="height:34px; width:360px; border-radius:8px; border:1px solid #263043; background:#0f141c; color:#e6e8ee; padding:0 10px; outline:none" />
-              <div id="searchResults" style="display:none; position:absolute; right:0; top:38px; width:420px; max-height:380px; overflow:auto; background:#0f141d; border:1px solid #263043; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.4); z-index:6"></div>
+            <div class="controls map-controls">
+              <div id="searchBox" style="position: relative">
+                <input
+                  id="search"
+                  type="text"
+                  placeholder="Search items…"
+                  style="height:34px;width:360px;border-radius:8px;border:1px solid #263043;background:#0f141c;color:#e6e8ee;padding:0 10px;outline:none;"
+                />
+                <div
+                  id="searchResults"
+                  style="display:none;position:absolute;right:0;top:38px;width:420px;max-height:380px;overflow:auto;background:#0f141d;border:1px solid #263043;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:6;"
+                ></div>
+              </div>
+              <button id="mapReset">Reset</button>
             </div>
-            <button id="mapReset">Reset</button>
           </div>
-        </div>
-        <div id="mapWrap" style="position:relative;overflow:hidden;height:520px;border-radius:8px;border:1px solid #1f2430;background:#0c0f14">
-          <img id="mapImg" alt="Map" draggable="false" style="position:absolute;left:0;top:0;transform-origin: 0 0; user-select:none; -webkit-user-drag:none;" />
-          <div id="markerLayer" style="position:absolute;left:0;top:0;transform-origin: 0 0;"></div>
-          <div id="popup"></div>
-        </div>
+          <div
+            id="mapWrap"
+            style="position:relative;overflow:hidden;height:520px;border-radius:8px;border:1px solid #1f2430;background:#0c0f14;"
+          >
+            <img
+              id="mapImg"
+              alt="Map"
+              draggable="false"
+              style="position:absolute;left:0;top:0;transform-origin:0 0;user-select:none;-webkit-user-drag:none;"
+            />
+            <div
+              id="markerLayer"
+              style="position:absolute;left:0;top:0;transform-origin:0 0;"
+            ></div>
+            <div id="popup"></div>
+          </div>
+          <section class="market-tracking card">
+            <div class="tracking-header">
+              <div>
+                <div class="tracking-title">Market Tracking</div>
+                <div class="tracking-filter">
+                  <label for="trackingCurrency" class="muted" style="font-size:11px;letter-spacing:0.3px;text-transform:uppercase;">Currency</label>
+                  <select id="trackingCurrency">
+                    <option value="all">All</option>
+                    <option value="scrap">Scrap</option>
+                    <option value="hqm">High Quality Metal</option>
+                    <option value="other">Other…</option>
+                  </select>
+                  <input id="trackingCurrencyOther" placeholder="Custom currency" style="display:none;" />
+                </div>
+              </div>
+              <button type="button" id="trackingRefresh">Refresh tracking</button>
+            </div>
+            <div id="trackingWarning" class="tracking-warning" style="display:none;"></div>
+            <div class="tracking-panels">
+              <div class="tracking-panel">
+                <div class="tracking-panel-header">
+                  <span>My Offers</span>
+                  <span class="muted" id="myOffersSummary">No offers yet</span>
+                </div>
+                <div class="tracking-panel-body" id="myOffersBody">
+                  <div class="muted">Your owned vending machines will populate this view.</div>
+                </div>
+                <div class="manual-entry" id="manualEntry" style="display:none;">
+                  <p class="muted" style="font-size:12px;margin:0;">
+                    No owned vending machines detected. Add manual offers via search.
+                  </p>
+                  <div class="field">
+                    <label for="manualItem">Item</label>
+                    <input id="manualItem" list="manualItemList" placeholder="Start typing to search…" />
+                    <datalist id="manualItemList"></datalist>
+                  </div>
+                  <div class="field">
+                    <label for="manualCurrency">Currency</label>
+                    <input id="manualCurrency" placeholder="Currency name or ID" />
+                  </div>
+                  <div class="field">
+                    <label for="manualCost">Cost per item</label>
+                    <input id="manualCost" type="number" min="0" step="0.01" placeholder="Cost" />
+                  </div>
+                  <div class="field">
+                    <label for="manualStock">Stock</label>
+                    <input id="manualStock" type="number" min="0" step="1" placeholder="Amount in stock" />
+                  </div>
+                  <div class="form-actions">
+                    <button type="button" id="manualAdd">Add manual offer</button>
+                  </div>
+                </div>
+              </div>
+              <div class="tracking-panel">
+                <div class="tracking-panel-header">
+                  <span>Others</span>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; color: var(--muted);">
+                      <input type="checkbox" id="othersFilterToggle" style="margin: 0;">
+                      <span>Match my offers</span>
+                    </label>
+                    <span class="muted" id="othersSummary">No offers yet</span>
+                  </div>
+                </div>
+                <div class="tracking-panel-body" id="othersBody">
+                  <div class="muted">Other players’ sell orders appear here.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+        <aside class="sidebar">
+          <section class="panel card" data-open="true">
+            <button class="panel-header" type="button">
+              <span>Owned Machines</span>
+              <span class="chevron">▾</span>
+            </button>
+            <div class="panel-body">
+              <div id="claimsStatus" class="panel-status">Loading claims…</div>
+              <div id="claimsList" class="panel-list"></div>
+              <form id="claimForm">
+                <div class="field">
+                  <label for="claimMachineId">Machine ID</label>
+                  <input
+                    id="claimMachineId"
+                    name="machineId"
+                    placeholder="Enter machine identifier"
+                    required
+                  />
+                </div>
+                <div class="form-actions">
+                  <button type="submit">Submit claim</button>
+                  <button type="button" id="claimsRefresh" class="ghost">Refresh list</button>
+                </div>
+                <div id="claimFeedback" class="muted" aria-live="polite" style="min-height:18px"></div>
+              </form>
+            </div>
+          </section>
+        </aside>
       </div>
       <div class="controls">
         <button id="refresh">Refresh</button>
         <span id="status" class="muted">Loading…</span>
       </div>
       <div id="error" class="error" style="display:none"></div>
-      <div id="list" class="grid" style="display:none"></div>
-      <footer>
-        Data shown from Rust+ websocket.
-      </footer>
     </main>
+    <footer>Data shown from Rust+ websocket.</footer>
     <script type="module">
-      const elList = document.getElementById('list');
       const elStatus = document.getElementById('status');
       const elError = document.getElementById('error');
       const elRefresh = document.getElementById('refresh');
@@ -87,31 +723,106 @@
       const elMapImg = document.getElementById('mapImg');
       const elMarkerLayer = document.getElementById('markerLayer');
       const elMapWrap = document.getElementById('mapWrap');
-      
       const elMapReset = document.getElementById('mapReset');
       const elPopup = document.getElementById('popup');
       const elSearch = document.getElementById('search');
       const elSearchResults = document.getElementById('searchResults');
 
-      function showError(msg){ elError.textContent = msg; elError.style.display='block'; }
-      function clearError(){ elError.textContent=''; elError.style.display='none'; }
+      const elClaimsList = document.getElementById('claimsList');
+      const elClaimsStatus = document.getElementById('claimsStatus');
+      const elClaimsRefresh = document.getElementById('claimsRefresh');
+      const elClaimForm = document.getElementById('claimForm');
+      const elClaimMachineId = document.getElementById('claimMachineId');
+      const elClaimFeedback = document.getElementById('claimFeedback');
+ 
+      const elTrackingCurrency = document.getElementById('trackingCurrency');
+      const elTrackingCurrencyOther = document.getElementById('trackingCurrencyOther');
+      const elMyOffersBody = document.getElementById('myOffersBody');
+      const elMyOffersSummary = document.getElementById('myOffersSummary');
+      const elOthersBody = document.getElementById('othersBody');
+      const elOthersSummary = document.getElementById('othersSummary');
+      const elTrackingWarning = document.getElementById('trackingWarning');
+      const elManualEntry = document.getElementById('manualEntry');
+      const elManualItem = document.getElementById('manualItem');
+      const elManualCurrency = document.getElementById('manualCurrency');
+      const elManualCost = document.getElementById('manualCost');
+      const elManualStock = document.getElementById('manualStock');
+      const elManualItemList = document.getElementById('manualItemList');
+      const elTrackingRefresh = document.getElementById('trackingRefresh');
+      const elOthersFilterToggle = document.getElementById('othersFilterToggle');
+      
+      // DEBUG: Check if manualAdd element exists and log timing
+      console.log('DEBUG: Checking for manualAdd element...');
+      const elManualAdd = document.getElementById('manualAdd');
+      console.log('DEBUG: elManualAdd element:', elManualAdd);
+      console.log('DEBUG: manualEntry element:', elManualEntry);
+      console.log('DEBUG: manualEntry display style:', elManualEntry ? elManualEntry.style.display : 'not found');
+ 
+      const manualOffers = [];
+      let currencyFilter = { type: 'all', custom: '' };
+      let showOnlyMatchingItems = false;
+      const chimeAudio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+      chimeAudio.volume = 0.2;
+ 
+      function updateManualItemList(searchIndex) {
+        if (!elManualItemList) return;
+        const seen = new Set();
+        const entries = [];
+        for (const entry of searchIndex) {
+          const label = entry.item || entry.itemName || `Item ${entry.itemId ?? ''}`;
+          if (!label) continue;
+          if (seen.has(label)) continue;
+          seen.add(label);
+          entries.push(`<option value="${escapeHtml(label)}"></option>`);
+          if (entries.length >= 40) break;
+        }
+        elManualItemList.innerHTML = entries.join('');
+      }
 
-      function itemRow(o){
-        const itemLabel = o.itemName ? o.itemName : `Item ${o.itemId}`;
-        const currLabel = o.currencyName ? o.currencyName : `${o.currencyId}`;
-        const bp = o.itemIsBlueprint ? ' (BP)' : '';
-        const cbp = o.currencyIsBlueprint ? ' (BP)' : '';
-        const stock = (o.amountInStock != null) ? o.amountInStock : '';
+      function loadFilterState() {
+        const stored = localStorage.getItem('marketTrackingFilter');
+        if (stored !== null) {
+          showOnlyMatchingItems = JSON.parse(stored);
+          elOthersFilterToggle.checked = showOnlyMatchingItems;
+        }
+      }
+
+      function saveFilterState() {
+        localStorage.setItem('marketTrackingFilter', JSON.stringify(showOnlyMatchingItems));
+      }
+
+      function escapeHtml(value) {
+        if (value == null) return '';
+        return String(value)
+          .replace(/&/g, '&')
+          .replace(/</g, '<')
+          .replace(/>/g, '>');
+      }
+
+      function showError(msg) {
+        elError.textContent = msg;
+        elError.style.display = 'block';
+      }
+
+      function clearError() {
+        elError.textContent = '';
+        elError.style.display = 'none';
+      }
+
+      function itemRow(entry) {
+        const itemLabel = entry.itemName ? entry.itemName : `Item ${entry.itemId}`;
+        const currLabel = entry.currencyName ? entry.currencyName : `${entry.currencyId}`;
+        const bp = entry.itemIsBlueprint ? ' (BP)' : '';
+        const cbp = entry.currencyIsBlueprint ? ' (BP)' : '';
+        const stock = entry.amountInStock != null ? entry.amountInStock : '';
         return `<div class="order">
-          <div class="sale">${o.quantity} × ${itemLabel}${bp}</div>
-          <div class="cost">${o.costPerItem} × ${currLabel}${cbp}</div>
+          <div class="sale">${entry.quantity} × ${itemLabel}${bp}</div>
+          <div class="cost">${entry.costPerItem} × ${currLabel}${cbp}</div>
           <div class="stock">${stock}</div>
         </div>`;
       }
 
-      function renderList(_data){ /* list hidden */ }
-
-      async function fetchInfo(){
+      async function fetchInfo() {
         try {
           const res = await fetch('/api/info');
           if (!res.ok) throw new Error('Failed to load server info');
@@ -123,114 +834,826 @@
       let mapMeta = null;
       const state = { scale: 0.25, x: 0, y: 0, dragging: false, lastX: 0, lastY: 0, moved: false };
       let rerenderPending = false;
-      function scheduleMarkerRerender(){ if (rerenderPending) return; rerenderPending = true; requestAnimationFrame(()=>{ rerenderPending=false; if (latestVending) renderMarkers(latestVending); }); }
-      function applyTransform(){
+      let latestVending = null;
+      let latestClusters = [];
+      let searchIndex = [];
+      let marketClaims = [];
+      let activePopupMachineId = null;
+      const claimsMap = new Map();
+
+      function scheduleMarkerRerender() {
+        if (rerenderPending) return;
+        rerenderPending = true;
+        requestAnimationFrame(() => {
+          rerenderPending = false;
+          if (latestVending) renderMarkers(latestVending);
+        });
+      }
+
+      function applyTransform() {
         elMapImg.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
         elMarkerLayer.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
         scheduleMarkerRerender();
+        updatePopupPosition();
       }
-      function resetView(){ state.scale = 0.25; state.x = 0; state.y = 0; applyTransform(); hidePopup(); }
+
+      function resetView() {
+        state.scale = 0.25;
+        state.x = 0;
+        state.y = 0;
+        applyTransform();
+        hidePopup();
+      }
+
+      function zoomToImagePoint(px, py, factor = 1.5) {
+        const newScale = Math.min(3, Math.max(0.1, state.scale * factor));
+        const rect = elMapWrap.getBoundingClientRect();
+        const cx = rect.width / 2;
+        const cy = rect.height / 2;
+        state.scale = newScale;
+        state.x = cx - px * newScale;
+        state.y = cy - py * newScale;
+        applyTransform();
+      }
+
+      function mapToPixel(machine, meta) {
+        const innerW = meta.width - 2 * meta.oceanMargin;
+        const innerH = meta.height - 2 * meta.oceanMargin;
+        const px = meta.oceanMargin + (machine.x / meta.mapSize) * innerW;
+        const pyInner = (machine.y / meta.mapSize) * innerH;
+        const py = meta.height - (meta.oceanMargin + pyInner);
+        return { x: px, y: py };
+      }
+      
+      function updatePopupPosition() {
+        if (!mapMeta || !activePopupMachineId || !latestVending) return;
+        const machine = latestVending.machines.find((m) => String(m.id) === String(activePopupMachineId));
+        if (!machine) {
+          hidePopup();
+          return;
+        }
+        const pos = mapToPixel(machine, mapMeta);
+        const scale = state.scale;
+        const x = pos.x * scale + state.x;
+        const y = pos.y * scale + state.y;
+        const wrapRect = elMapWrap.getBoundingClientRect();
+        const popupWidth = elPopup.offsetWidth || 280;
+        const popupHeight = elPopup.offsetHeight || 200;
+        const offsetX = Math.max(8, Math.min(wrapRect.width - popupWidth - 8, x + 10));
+        const offsetY = Math.max(8, Math.min(wrapRect.height - popupHeight - 8, y - 10));
+        elPopup.style.left = `${offsetX}px`;
+        elPopup.style.top = `${offsetY}px`;
+      }
+
+      function clusterMachines(vending) {
+        const thresholdScreen = 24;
+        const tImg = thresholdScreen / state.scale;
+        const clusters = [];
+        for (const m of vending.machines) {
+          const pos = mapToPixel(m, mapMeta);
+          let best = null;
+          let bd = 0;
+          for (const c of clusters) {
+            const dx = c.x - pos.x;
+            const dy = c.y - pos.y;
+            const d = Math.hypot(dx, dy);
+            if (d <= tImg && (!best || d < bd)) {
+              best = c;
+              bd = d;
+            }
+          }
+          if (best) {
+            const n = best.items.length;
+            best.x = (best.x * n + pos.x) / (n + 1);
+            best.y = (best.y * n + pos.y) / (n + 1);
+            best.items.push(m);
+          } else {
+            clusters.push({ x: pos.x, y: pos.y, items: [m] });
+          }
+        }
+        return clusters;
+      }
+
+      function renderMarkers(vending) {
+        if (!mapMeta) return;
+        latestVending = vending;
+        latestClusters = clusterMachines(vending);
+        const markers = latestClusters
+          .map((c, idx) => {
+            if (c.items.length === 1) {
+              const m = c.items[0];
+              const title = m.name || `VM #${m.id}`;
+              const isOwned = claimsMap.has(String(m.id));
+              return `<div class="vm-marker${isOwned ? ' owned' : ''}" data-id="${m.id}" title="${title}" style="left:${c.x - 5}px;top:${c.y - 5}px;"></div>`;
+            }
+            return `<div class="cluster" data-cluster="${idx}" title="${c.items.length} vending machines" style="left:${c.x - 10}px;top:${c.y - 10}px;">${c.items.length}</div>`;
+          })
+          .join('');
+        elMarkerLayer.innerHTML = markers;
+      }
+
+      function showPopupFor(id) {
+        elSearchResults.style.display = 'none';
+        if (!latestVending || !mapMeta) return;
+        const machine = latestVending.machines.find((m) => String(m.id) === String(id));
+        if (!machine) return;
+        const claim = claimsMap.get(String(machine.id));
+        const actionLabel = claim ? 'Release' : 'Claim';
+        const coordsText =
+          machine.x != null && machine.y != null
+            ? ` · Coords: (${machine.x.toFixed(0)}, ${machine.y.toFixed(0)})`
+            : '';
+        let html = `<div class="hdr">
+          <div>
+            <div class="title">${escapeHtml(machine.name || `Vending Machine #${machine.id}`)}</div>
+            <div class="muted" style="font-size:12px">ID: ${escapeHtml(String(machine.id))}${coordsText}</div>
+          </div>
+          <span class="pill">${machine.outOfStock ? 'Out of stock' : 'Active'}</span>
+        </div>`;
+        const statusText = claim ? `Claimed by ${escapeHtml(claim.ownerId || 'Unknown')}` : 'Unclaimed';
+        html += `<div class="hint">${statusText}</div>`;
+        if (claim?.metadata) {
+          html += `<div class="muted" style="font-size:11px;">Metadata: ${escapeHtml(
+            typeof claim.metadata === 'string' ? claim.metadata : JSON.stringify(claim.metadata)
+          )}</div>`;
+        }
+        const orders = Array.isArray(machine.sellOrders) ? machine.sellOrders : [];
+        if (orders.length) {
+          const rows = orders
+            .map((order) => {
+              const itemLabel = order.itemName
+                ? escapeHtml(order.itemName)
+                : escapeHtml(`Item ${order.itemId}`);
+              const currencyLabel = escapeHtml(order.currencyName || String(order.currencyId ?? ''));
+              const costValue =
+                order.costPerItem != null ? escapeHtml(String(order.costPerItem)) : '—';
+              const stockValue =
+                order.amountInStock != null ? escapeHtml(String(order.amountInStock)) : '—';
+              return `<tr><td><span class="popup-sale"><strong>${itemLabel}</strong></span></td><td><span class="popup-cost">${costValue} × ${currencyLabel}</span></td><td class="popup-stock">${stockValue}</td></tr>`;
+            })
+            .join('');
+          html += `<table class="popup-table"><thead><tr><th>Item</th><th>Cost</th><th>Stock</th></tr></thead><tbody>${rows}</tbody></table>`;
+        } else {
+          html += `<div class="muted" style="font-size:12px">No items listed.</div>`;
+        }
+        html += `<div class="form-actions" style="justify-content:flex-end;margin-top:12px;"><button type="button" class="panel-link" data-claim-machine="${machine.id}">${actionLabel}</button></div>`;
+        elPopup.innerHTML = html;
+        activePopupMachineId = machine.id;
+        elPopup.style.display = 'block';
+        updatePopupPosition();
+      }
+
+      function hidePopup() {
+        elPopup.style.display = 'none';
+        activePopupMachineId = null;
+      }
+
       elMapReset.addEventListener('click', resetView);
       elMapImg.addEventListener('dragstart', (e) => e.preventDefault());
       elMapWrap.addEventListener('contextmenu', (e) => e.preventDefault());
-      elMapWrap.addEventListener('mousedown', (e) => { if (e.target && e.target.closest('#popup')) return; state.dragging = true; state.moved=false; state.lastX=e.clientX; state.lastY=e.clientY; elMapWrap.classList.add('dragging'); elSearchResults.style.display='none'; });
-      window.addEventListener('mouseup', () => { state.dragging = false; elMapWrap.classList.remove('dragging'); });
+      elMapWrap.addEventListener('mousedown', (e) => {
+        if (e.target && e.target.closest('#popup')) return;
+        state.dragging = true;
+        state.moved = false;
+        state.lastX = e.clientX;
+        state.lastY = e.clientY;
+        elMapWrap.classList.add('dragging');
+        elSearchResults.style.display = 'none';
+      });
+      window.addEventListener('mouseup', () => {
+        state.dragging = false;
+        elMapWrap.classList.remove('dragging');
+      });
       window.addEventListener('mousemove', (e) => {
         if (!state.dragging) return;
-        const dx = e.clientX - state.lastX; const dy = e.clientY - state.lastY;
-        state.lastX = e.clientX; state.lastY = e.clientY;
-        if (Math.abs(dx)>2 || Math.abs(dy)>2) state.moved = true;
-        state.x += dx; state.y += dy; applyTransform();
-      });
-      elMapWrap.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const factor = e.deltaY < 0 ? 1.1 : 0.9;
-        const prev = state.scale; state.scale = Math.min(3, Math.max(0.1, state.scale * factor));
-        const rect = elMapWrap.getBoundingClientRect();
-        const mx = e.clientX - rect.left; const my = e.clientY - rect.top;
-        state.x = mx - (mx - state.x) * (state.scale / prev);
-        state.y = my - (my - state.y) * (state.scale / prev);
+        const dx = e.clientX - state.lastX;
+        const dy = e.clientY - state.lastY;
+        state.lastX = e.clientX;
+        state.lastY = e.clientY;
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) state.moved = true;
+        state.x += dx;
+        state.y += dy;
         applyTransform();
-      }, { passive: false });
-      function zoomToImagePoint(px, py, factor=1.5){ const newScale=Math.min(3,Math.max(0.1,state.scale*factor)); const rect=elMapWrap.getBoundingClientRect(); const cx=rect.width/2, cy=rect.height/2; state.scale=newScale; state.x=cx - px*newScale; state.y=cy - py*newScale; applyTransform(); }
+      });
+      elMapWrap.addEventListener(
+        'wheel',
+        (e) => {
+          e.preventDefault();
+          const factor = e.deltaY < 0 ? 1.1 : 0.9;
+          const prev = state.scale;
+          state.scale = Math.min(3, Math.max(0.1, state.scale * factor));
+          const rect = elMapWrap.getBoundingClientRect();
+          const mx = e.clientX - rect.left;
+          const my = e.clientY - rect.top;
+          state.x = mx - (mx - state.x) * (state.scale / prev);
+          state.y = my - (my - state.y) * (state.scale / prev);
+          applyTransform();
+        },
+        { passive: false }
+      );
 
-      function mapToPixel(m, meta){ const innerW=meta.width-2*meta.oceanMargin; const innerH=meta.height-2*meta.oceanMargin; const px=meta.oceanMargin + (m.x/meta.mapSize)*innerW; const pyInner=(m.y/meta.mapSize)*innerH; const py=meta.height - (meta.oceanMargin + pyInner); return {x:px,y:py}; }
+      elMapWrap.addEventListener('click', (e) => {
+        if (elPopup.contains(e.target)) return;
+        elSearchResults.style.display = 'none';
+        const target = e.target;
+        if (target.classList.contains('vm-marker')) {
+          if (state.moved) {
+            state.moved = false;
+            return;
+          }
+          const id = target.getAttribute('data-id');
+          showPopupFor(id);
+          e.stopPropagation();
+          return;
+        }
+        if (target.classList.contains('cluster')) {
+          if (state.moved) {
+            state.moved = false;
+            return;
+          }
+          const idx = Number(target.getAttribute('data-cluster'));
+          const cluster = latestClusters[idx];
+          if (!cluster) return;
+          const preview = cluster.items
+            .slice(0, 8)
+            .map((m) => `<div><a href="#" class="vm-link" data-id="${m.id}">${m.name || `Vending Machine #${m.id}`}</a></div>`)
+            .join('');
+          elPopup.innerHTML = `<div class="hdr"><div class="title">${cluster.items.length} vending machines</div><button id="zoomInBtn" class="btn">Zoom in</button></div><div class="hint">Choose one:</div>${preview}`;
+          const x = cluster.x * state.scale + state.x;
+          const y = cluster.y * state.scale + state.y;
+          const rect = elMapWrap.getBoundingClientRect();
+          elPopup.style.left = `${Math.max(8, Math.min(rect.width - 440, x + 10))}px`;
+          elPopup.style.top = `${Math.max(8, Math.min(rect.height - 320, y - 10))}px`;
+          elPopup.style.display = 'block';
+          const zoomBtn = document.getElementById('zoomInBtn');
+          if (zoomBtn) {
+            zoomBtn.onclick = (ev) => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              zoomToImagePoint(cluster.x, cluster.y, 1.6);
+            };
+          }
+          return;
+        }
+        hidePopup();
+      });
 
-      let latestVending = null; let latestClusters = [];
-      function clusterMachines(vending){ const thresholdScreen=24; const tImg=thresholdScreen/state.scale; const clusters=[]; for (const m of vending.machines){ const pos=mapToPixel(m,mapMeta); let best=null,bd=0; for (const c of clusters){ const dx=c.x-pos.x, dy=c.y-pos.y, d=Math.hypot(dx,dy); if (d<=tImg && (!best || d<bd)){ best=c; bd=d; } } if (best){ const n=best.items.length; best.x=(best.x*n + pos.x)/(n+1); best.y=(best.y*n + pos.y)/(n+1); best.items.push(m);} else { clusters.push({x:pos.x,y:pos.y,items:[m]}); } } return clusters; }
-      function renderMarkers(vending){ if (!mapMeta) return; latestVending=vending; latestClusters=clusterMachines(vending); const markers=latestClusters.map((c,idx)=>{ if (c.items.length===1){ const m=c.items[0]; const title=m.name||`VM #${m.id}`; return `<div class=\"vm-marker\" data-id=\"${m.id}\" title=\"${title}\" style=\"left:${c.x-5}px;top:${c.y-5}px;\"></div>`; } else { return `<div class=\"cluster\" data-cluster=\"${idx}\" title=\"${c.items.length} vending machines\" style=\"left:${c.x-10}px;top:${c.y-10}px;\">${c.items.length}</div>`; } }).join(''); elMarkerLayer.innerHTML = markers; }
+      elPopup.addEventListener('click', (e) => {
+        const link = e.target.closest('.vm-link');
+        if (!link) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const id = link.getAttribute('data-id');
+        showPopupFor(id);
+      });
 
-      function showPopupFor(id){
-        elSearchResults.style.display='none';
-        if (!latestVending || !mapMeta) return;
-        const m = latestVending.machines.find(mm => String(mm.id)===String(id));
-        if (!m) return;
-        const pos=mapToPixel(m,mapMeta);
-        let html=`<div class=\"hdr\"><div class=\"title\">${m.name||('Vending Machine #'+m.id)}</div><span class=\"pill\">${m.outOfStock?'Out of stock':'Active'}</span></div>`;
-        html += `<div class=\"hint\">(${m.x.toFixed(0)}, ${m.y.toFixed(0)}) · ${m.sellOrders.length} orders</div>`;
-        html += `<div class=\"orders\"><div class=\"header\"><div>For Sale</div><div>Cost</div><div>Stock</div></div>` + m.sellOrders.map(itemRow).join('') + `</div>`;
-        elPopup.innerHTML=html;
-        const scale=state.scale; const x=pos.x*scale+state.x; const y=pos.y*scale+state.y; const wrapRect=elMapWrap.getBoundingClientRect();
-        const left=Math.max(8,Math.min(wrapRect.width-440,x+10)); const top=Math.max(8,Math.min(wrapRect.height-320,y-10));
-        elPopup.style.left=left+'px'; elPopup.style.top=top+'px'; elPopup.style.display='block';
-      }
-      function hidePopup(){ elPopup.style.display='none'; }
-
-      elMapWrap.addEventListener('click', (e)=>{ if (elPopup.contains(e.target)) return; elSearchResults.style.display='none'; const t=e.target; if (t && t.classList && t.classList.contains('vm-marker')){ if (state.moved){ state.moved=false; return; } const id=t.getAttribute('data-id'); showPopupFor(id); e.stopPropagation(); return; } else if (t && t.classList && t.classList.contains('cluster')){ if (state.moved){ state.moved=false; return; } const idx=Number(t.getAttribute('data-cluster')); const c=latestClusters[idx]; if (!c) return; const preview=c.items.slice(0,8).map(mi=>`<div><a href=\"#\" class=\"vm-link\" data-id=\"${mi.id}\">${mi.name || ('Vending Machine #'+mi.id)}</a></div>`).join(''); elPopup.innerHTML=`<div class=\"hdr\"><div class=\"title\">${c.items.length} vending machines</div><button id=\"zoomInBtn\" class=\"btn\">Zoom in</button></div><div class=\"hint\">Choose one:</div>${preview}`; const x=c.x*state.scale+state.x; const y=c.y*state.scale+state.y; const rect=elMapWrap.getBoundingClientRect(); elPopup.style.left=Math.max(8,Math.min(rect.width-440,x+10))+'px'; elPopup.style.top=Math.max(8,Math.min(rect.height-320,y-10))+'px'; elPopup.style.display='block'; const z=document.getElementById('zoomInBtn'); if (z) z.onclick=(ev)=>{ ev.preventDefault(); ev.stopPropagation(); zoomToImagePoint(c.x,c.y,1.6); }; return; } hidePopup(); });
-      elPopup.addEventListener('click', (e)=>{ const t=e.target; if (t && t.classList && t.classList.contains('vm-link')){ e.preventDefault(); e.stopPropagation(); const id=t.getAttribute('data-id'); showPopupFor(id); }});
-
-      // Simple client-side search across vending items
-      let searchIndex = [];
-      function buildSearchIndex(vending){
+      function buildSearchIndex(vending) {
         const entries = [];
-        for (const m of vending.machines){
-          for (const o of m.sellOrders){
+        for (const m of vending.machines) {
+          for (const o of m.sellOrders) {
+            const itemLabel = o.itemName ? o.itemName : `Item ${o.itemId}`;
             entries.push({
-              machineId: m.id, name: m.name || (`Vending Machine #${m.id}`), x: m.x, y: m.y,
-              item: o.itemName || `Item ${o.itemId}`, currency: o.currencyName || `${o.currencyId}`,
-              quantity: o.quantity, cost: o.costPerItem, stock: (o.amountInStock!=null?o.amountInStock:''),
-              key: `${(o.itemName||'').toLowerCase()} ${(o.currencyName||'').toLowerCase()} ${(m.name||'').toLowerCase()}`
+              machineId: m.id,
+              name: m.name || `Vending Machine #${m.id}`,
+              x: m.x,
+              y: m.y,
+              itemId: o.itemId,
+              item: itemLabel,
+              currency: o.currencyName || `${o.currencyId}`,
+              quantity: o.quantity,
+              cost: o.costPerItem,
+              stock: o.amountInStock != null ? o.amountInStock : '',
+              key: `${(itemLabel || '').toLowerCase()} ${(o.currencyName || '').toLowerCase()} ${(m.name || '').toLowerCase()}`,
             });
           }
         }
         searchIndex = entries;
       }
 
-      function renderSearchResults(q){
-        if (!q){ elSearchResults.style.display='none'; elSearchResults.innerHTML=''; return; }
-        const s = q.toLowerCase().trim();
-        const results = searchIndex.filter(e => e.key.includes(s)).slice(0, 40);
-        if (!results.length){ elSearchResults.style.display='none'; elSearchResults.innerHTML=''; return; }
-        elSearchResults.style.display='block';
-        elSearchResults.innerHTML = results.map(r => {
-          const sale = `${r.quantity} × ${r.item}`;
-          const price = `${r.cost} × ${r.currency}`;
-          const stock = r.stock!=='' ? ` · stock ${r.stock}` : '';
-          return `<a href="#" class="res" data-id="${r.machineId}" style="display:block;padding:8px 10px;border-bottom:1px solid #1f2635;text-decoration:none;color:#dfe7f3">`+
-            `<div style="display:flex;justify-content:space-between;gap:12px"><div style="white-space:normal">${sale}</div><div style="color:#aab4c4;white-space:nowrap">${price}${stock}</div></div>`+
-            `<div class="muted" style="font-size:11px;margin-top:2px">${r.name} · (${r.x.toFixed(0)}, ${r.y.toFixed(0)})</div>`+
-          `</a>`;
-        }).join('');
+      function renderSearchResults(query) {
+        if (!query) {
+          elSearchResults.style.display = 'none';
+          elSearchResults.innerHTML = '';
+          return;
+        }
+        const normalized = query.toLowerCase().trim();
+        const results = searchIndex.filter((entry) => entry.key.includes(normalized)).slice(0, 40);
+        if (!results.length) {
+          elSearchResults.style.display = 'none';
+          elSearchResults.innerHTML = '';
+          return;
+        }
+        elSearchResults.style.display = 'block';
+        elSearchResults.innerHTML = results
+          .map(
+            (entry) => `<a href="#" class="res" data-id="${entry.machineId}" style="display:block;padding:8px 10px;border-bottom:1px solid #1f2635;text-decoration:none;color:#dfe7f3">
+              <div style="display:flex;justify-content:space-between;gap:12px"><div style="white-space:normal">${entry.quantity} × ${entry.item}</div><div style="color:#aab4c4;white-space:nowrap">${entry.cost} × ${entry.currency}${entry.stock !== '' ? ` · stock ${entry.stock}` : ''}</div></div>
+              <div class="muted" style="font-size:11px;margin-top:2px">${entry.name} · (${entry.x.toFixed(0)}, ${entry.y.toFixed(0)})</div>
+            </a>`
+          )
+          .join('');
       }
 
       elSearch.addEventListener('input', () => renderSearchResults(elSearch.value));
       elSearchResults.addEventListener('click', (e) => {
-        const a = e.target.closest('a.res');
-        if (!a) return;
-        e.preventDefault(); e.stopPropagation();
-        const id = a.getAttribute('data-id');
-        // focus map on machine and open popup
-        const m = latestVending && latestVending.machines.find(mm => String(mm.id)===String(id));
-        if (m){
-          const pos = mapToPixel(m, mapMeta);
+        const link = e.target.closest('a.res');
+        if (!link) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const id = link.getAttribute('data-id');
+        const machine = latestVending && latestVending.machines.find((m) => String(m.id) === String(id));
+        if (machine) {
+          const pos = mapToPixel(machine, mapMeta);
           zoomToImagePoint(pos.x, pos.y, 1.5);
           showPopupFor(id);
-          elSearchResults.style.display='none';
+          elSearchResults.style.display = 'none';
         }
       });
 
-      function fitMapToViewport(){ if (!mapMeta) return; const rect=elMapWrap.getBoundingClientRect(); const scale=Math.min(rect.width/mapMeta.width, rect.height/mapMeta.height); state.scale=scale; state.x=(rect.width - mapMeta.width*scale)/2; state.y=(rect.height - mapMeta.height*scale)/2; applyTransform(); }
-      async function loadMap(){
+      function getUniqueSearchSuggestions(query) {
+        const normalized = (query || '').toLowerCase().trim();
+        if (!searchIndex.length) return [];
+        const seen = new Set();
+        const results = [];
+        for (const entry of searchIndex) {
+          if (normalized && !entry.key.includes(normalized)) continue;
+          const key = `${entry.item}|${entry.itemId ?? ''}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          results.push(entry);
+          if (results.length >= 24) break;
+        }
+        return results;
+      }
+
+
+      function focusMachineOnMap(machineId) {
+        if (!machineId || !latestVending || !mapMeta) return;
+        const machine = latestVending.machines.find((m) => String(m.id) === String(machineId));
+        if (!machine) return;
+        const pos = mapToPixel(machine, mapMeta);
+        zoomToImagePoint(pos.x, pos.y, 1.5);
+        showPopupFor(machineId);
+      }
+
+      function renderClaims() {
+        claimsMap.clear();
+        if (!marketClaims.length) {
+          elClaimsList.innerHTML = '<div class="muted">No active claims.</div>';
+          return;
+        }
+        elClaimsList.innerHTML = marketClaims
+          .map((entry) => {
+            const coords = entry.x != null && entry.y != null ? `(${entry.x.toFixed(0)}, ${entry.y.toFixed(0)})` : 'Coordinates unavailable';
+            const claimedAt = entry.claim?.claimedAt ? new Date(entry.claim.claimedAt).toLocaleString() : 'Unknown';
+            const metadataContent = entry.claim?.metadata;
+            const metadata = metadataContent
+              ? `<div class="muted" style="font-size:11px;">Metadata: ${escapeHtml(
+                  typeof metadataContent === 'string' ? metadataContent : JSON.stringify(metadataContent)
+                )}</div>`
+              : '';
+            claimsMap.set(String(entry.machineId), entry.claim);
+            return `
+            <div class="claim-row">
+              <div class="claim-row-header">
+                <strong>${escapeHtml(entry.machineName || `Vending Machine #${entry.machineId}`)}</strong>
+                <span class="muted">ID: ${escapeHtml(entry.machineId)}</span>
+              </div>
+              <div class="claim-row-meta">
+                <span>${coords}</span>
+                <span>Owner: ${escapeHtml(entry.claim?.ownerId ?? 'Unknown')}</span>
+                <span>Claimed: ${claimedAt}</span>
+              </div>
+              ${metadata}
+              <div class="claim-row-actions">
+                <button type="button" class="panel-link" data-focus-machine="${escapeHtml(entry.machineId)}">Focus on map</button>
+              </div>
+            </div>
+          `;
+          })
+          .join('');
+      }
+
+      async function loadClaims() {
+        elClaimsStatus.textContent = 'Loading owned machines…';
+        try {
+          const res = await fetch('/api/market/claims');
+          if (!res.ok) throw new Error('Failed to load claims');
+          const data = await res.json();
+          marketClaims = Array.isArray(data.claims) ? data.claims : [];
+          renderClaims();
+          elClaimsStatus.textContent = `Showing ${marketClaims.length} owned machine(s)`;
+          if (activePopupMachineId) {
+            showPopupFor(activePopupMachineId);
+          }
+        } catch (error) {
+          elClaimsStatus.textContent = 'Unable to load owned machines';
+          elClaimsList.innerHTML = `<div class="muted">Error: ${escapeHtml(error.message)}</div>`;
+        }
+      }
+
+      elClaimsRefresh.addEventListener('click', () => loadClaims());
+
+      async function updateOwnership(payload) {
+        elClaimFeedback.textContent = 'Updating ownership…';
+        try {
+          const res = await fetch('/api/market/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          if (!res.ok || data.success === false) throw new Error(data.error || 'Failed to update ownership');
+          elClaimFeedback.textContent = data.message || 'Ownership updated';
+          elClaimForm.reset();
+          await load();
+        } catch (error) {
+          elClaimFeedback.textContent = `Error: ${error.message}`;
+        }
+      }
+
+      elClaimForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const machineIdValue = elClaimMachineId.value.trim();
+        if (!machineIdValue) {
+          elClaimFeedback.textContent = 'Machine ID is required';
+          return;
+        }
+        const payload = { machineId: machineIdValue };
+        updateOwnership(payload);
+      });
+
+      // Market Tracking functionality
+      function normalizeCurrency(currencyName) {
+        if (!currencyName) return '';
+        const lower = currencyName.toLowerCase();
+        if (lower.includes('scrap')) return 'scrap';
+        if (lower.includes('high quality metal') || lower.includes('hqm')) return 'hqm';
+        return lower;
+      }
+
+      function matchesCurrencyFilter(currencyName) {
+        if (currencyFilter.type === 'all') return true;
+        if (currencyFilter.type === 'other') {
+          const normalized = normalizeCurrency(currencyName);
+          return normalized !== 'scrap' && normalized !== 'hqm';
+        }
+        return normalizeCurrency(currencyName) === currencyFilter.type;
+      }
+
+      function groupMarketData(vendingData) {
+        const myOffers = new Map();
+        const others = new Map();
+        const ownedMachineIds = new Set(claimsMap.keys());
+
+        for (const machine of vendingData.machines) {
+          const isOwned = ownedMachineIds.has(String(machine.id));
+          
+          for (const order of machine.sellOrders) {
+            if (!matchesCurrencyFilter(order.currencyName)) continue;
+            
+            const itemKey = `${order.itemId}|${order.itemName || ''}`;
+            const currencyKey = `${order.currencyId}|${order.currencyName || ''}`;
+            const offerKey = `${itemKey}|${currencyKey}`;
+            
+            const offerData = {
+              itemId: order.itemId,
+              itemName: order.itemName || `Item ${order.itemId}`,
+              currencyId: order.currencyId,
+              currencyName: order.currencyName || `${order.currencyId}`,
+              costPerItem: order.costPerItem,
+              totalStock: 0,
+              machineCount: 0,
+              machineIds: []
+            };
+
+            const targetMap = isOwned ? myOffers : others;
+            
+            if (!targetMap.has(offerKey)) {
+              targetMap.set(offerKey, { ...offerData });
+            }
+            
+            const existing = targetMap.get(offerKey);
+            existing.totalStock += (order.amountInStock || 0);
+            existing.machineCount += 1;
+            existing.machineIds.push(machine.id);
+          }
+        }
+
+        return { myOffers, others };
+      }
+
+      function renderMarketTracking(vendingData) {
+        const { myOffers, others } = groupMarketData(vendingData);
+        const hasOwnedMachines = claimsMap.size > 0;
+
+        // Show/hide manual entry based on ownership
+        elManualEntry.style.display = hasOwnedMachines ? 'none' : 'block';
+
+        // Render My Offers
+        if (myOffers.size === 0) {
+          elMyOffersBody.innerHTML = `<div class="muted">${hasOwnedMachines ? 'No items found in your owned machines.' : 'Your owned vending machines will populate this view.'}</div>`;
+          elMyOffersSummary.textContent = hasOwnedMachines ? 'No offers' : 'No offers yet';
+        } else {
+          const rows = Array.from(myOffers.values())
+            .sort((a, b) => a.itemName.localeCompare(b.itemName))
+            .map(offer => `
+              <div class="tracking-row">
+                <div class="tracking-row-details">
+                  <div>${offer.itemName}</div>
+                  <small>${offer.costPerItem} × ${offer.currencyName} · Stock: ${offer.totalStock} · ${offer.machineCount} machine${offer.machineCount !== 1 ? 's' : ''}</small>
+                </div>
+              </div>
+            `).join('');
+          elMyOffersBody.innerHTML = rows;
+          elMyOffersSummary.textContent = `${myOffers.size} offers`;
+        }
+
+        // Create Set of item names from "My Offers" for efficient matching
+        const myOfferItemNames = new Set(Array.from(myOffers.values()).map(offer => offer.itemName));
+
+        // Filter "Others" if toggle is enabled
+        let filteredOthers = others;
+        if (showOnlyMatchingItems && myOfferItemNames.size > 0) {
+          filteredOthers = new Map(Array.from(others.entries()).filter(([key, offer]) =>
+            myOfferItemNames.has(offer.itemName)
+          ));
+        }
+
+        // Render Others with filtering
+        if (filteredOthers.size === 0) {
+          let message = 'Other players\' sell orders appear here.';
+          if (showOnlyMatchingItems && others.size > 0) {
+            message = `No matching items found (${others.size} total offers)`;
+          }
+          elOthersBody.innerHTML = `<div class="muted">${message}</div>`;
+          elOthersSummary.textContent = showOnlyMatchingItems
+            ? `${filteredOthers.size}/${others.size} offers`
+            : `${others.size} offers`;
+        } else {
+          const rows = Array.from(filteredOthers.values())
+            .sort((a, b) => a.itemName.localeCompare(b.itemName))
+            .map(offer => `
+              <div class="tracking-row">
+                <div class="tracking-row-details">
+                  <div>${offer.itemName}</div>
+                  <small>${offer.costPerItem} × ${offer.currencyName} · Stock: ${offer.totalStock} · ${offer.machineCount} machine${offer.machineCount !== 1 ? 's' : ''}</small>
+                </div>
+              </div>
+            `).join('');
+          elOthersBody.innerHTML = rows;
+          elOthersSummary.textContent = showOnlyMatchingItems
+            ? `${filteredOthers.size}/${others.size} offers`
+            : `${filteredOthers.size} offers`;
+        }
+
+        // Check for undercuts if user has offers
+        if (myOffers.size > 0) {
+          checkForUndercuts(myOffers, filteredOthers);
+        }
+      }
+
+      function checkForUndercuts(myOffers, others) {
+        let hasUndercut = false;
+        const undercutItems = [];
+
+        for (const [offerKey, myOffer] of myOffers) {
+          const competingOffers = Array.from(others.values())
+            .filter(other =>
+              other.itemId === myOffer.itemId &&
+              other.currencyId === myOffer.currencyId &&
+              other.costPerItem < myOffer.costPerItem
+            )
+            .sort((a, b) => a.costPerItem - b.costPerItem);
+
+          if (competingOffers.length > 0) {
+            hasUndercut = true;
+            const bestCompetitor = competingOffers[0];
+            undercutItems.push({
+              itemName: myOffer.itemName,
+              myCost: myOffer.costPerItem,
+              bestCost: bestCompetitor.costPerItem,
+              currencyName: myOffer.currencyName
+            });
+          }
+        }
+
+        if (hasUndercut) {
+          const warningText = undercutItems.map(item =>
+            `${item.itemName}: Your price ${item.myCost} × ${item.currencyName} - Best offer ${item.bestCost} × ${item.currencyName}`
+          ).join(' | ');
+          
+          elTrackingWarning.textContent = `⚠️ Undercut Warning: ${warningText}`;
+          elTrackingWarning.style.display = 'block';
+          
+          // Play chime sound
+          chimeAudio.play().catch(() => {
+            // Ignore audio playback errors
+          });
+        } else {
+          elTrackingWarning.style.display = 'none';
+        }
+      }
+
+      // Manual entry functionality
+      function loadManualOffers() {
+        const stored = localStorage.getItem('manualMarketOffers');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            manualOffers.length = 0;
+            manualOffers.push(...parsed);
+          } catch (e) {
+            console.error('Failed to load manual offers:', e);
+          }
+        }
+      }
+
+      function saveManualOffers() {
+        try {
+          localStorage.setItem('manualMarketOffers', JSON.stringify(manualOffers));
+        } catch (e) {
+          console.error('Failed to save manual offers:', e);
+        }
+      }
+
+      function addManualOffer() {
+        const item = elManualItem.value.trim();
+        const currency = elManualCurrency.value.trim();
+        const cost = parseFloat(elManualCost.value);
+        const stock = parseInt(elManualStock.value) || 0;
+
+        if (!item || !currency || isNaN(cost) || cost < 0) {
+          elClaimFeedback.textContent = 'Please fill in all manual offer fields correctly.';
+          return;
+        }
+
+        const offer = {
+          id: Date.now().toString(),
+          item,
+          currency,
+          cost,
+          stock,
+          addedAt: new Date().toISOString()
+        };
+
+        manualOffers.push(offer);
+        saveManualOffers();
+        
+        // Clear form
+        elManualItem.value = '';
+        elManualCurrency.value = '';
+        elManualCost.value = '';
+        elManualStock.value = '';
+
+        // Refresh display
+        renderManualOffers();
+      }
+
+      function renderManualOffers() {
+        if (manualOffers.length === 0) {
+          elMyOffersBody.innerHTML = '<div class="muted">Add manual offers to track your items.</div>';
+          elMyOffersSummary.textContent = 'No offers';
+          return;
+        }
+
+        const rows = manualOffers
+          .sort((a, b) => a.item.localeCompare(b.item))
+          .map(offer => `
+            <div class="tracking-row">
+              <div class="tracking-row-details">
+                <div>${offer.item}</div>
+                <small>${offer.cost} × ${offer.currency} · Stock: ${offer.stock}</small>
+              </div>
+              <div class="tracking-row-actions">
+                <button type="button" onclick="removeManualOffer('${offer.id}')" style="background:#ef444;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:11px;">Remove</button>
+              </div>
+            </div>
+          `).join('');
+        
+        elMyOffersBody.innerHTML = rows;
+        elMyOffersSummary.textContent = `${manualOffers.length} manual offers`;
+
+        // Add clear all button if there are offers
+        if (manualOffers.length > 0) {
+          const clearButton = document.createElement('div');
+          clearButton.innerHTML = `
+            <div style="margin-top:8px;text-align:center;">
+              <button type="button" onclick="clearAllManualOffers()" class="ghost" style="font-size:11px;">Clear all manual offers</button>
+            </div>
+          `;
+          elMyOffersBody.appendChild(clearButton.firstElementChild);
+        }
+      }
+
+      function removeManualOffer(id) {
+        const index = manualOffers.findIndex(offer => offer.id === id);
+        if (index !== -1) {
+          manualOffers.splice(index, 1);
+          saveManualOffers();
+          renderManualOffers();
+        }
+      }
+
+      function clearAllManualOffers() {
+        if (confirm('Are you sure you want to clear all manual offers?')) {
+          manualOffers.length = 0;
+          saveManualOffers();
+          renderManualOffers();
+        }
+      }
+
+      // Currency filter handling
+      elTrackingCurrency.addEventListener('change', () => {
+        const value = elTrackingCurrency.value;
+        if (value === 'other') {
+          elTrackingCurrencyOther.style.display = 'block';
+          currencyFilter = { type: 'other', custom: elTrackingCurrencyOther.value.trim() };
+        } else {
+          elTrackingCurrencyOther.style.display = 'none';
+          currencyFilter = { type: value, custom: '' };
+        }
+        
+        if (latestVending) {
+          renderMarketTracking(latestVending);
+        }
+      });
+
+      elTrackingCurrencyOther.addEventListener('input', () => {
+        currencyFilter.custom = elTrackingCurrencyOther.value.trim();
+        if (latestVending) {
+          renderMarketTracking(latestVending);
+        }
+      });
+
+      // Manual offer submission
+      if (elManualAdd) {
+        console.log('DEBUG: Adding event listener to elManualAdd');
+        elManualAdd.addEventListener('click', addManualOffer);
+      } else {
+        console.error('DEBUG: elManualAdd is null, cannot add event listener');
+      }
+
+      // Make functions globally accessible
+      window.removeManualOffer = removeManualOffer;
+      window.clearAllManualOffers = clearAllManualOffers;
+
+      // Refresh tracking button
+      elTrackingRefresh.addEventListener('click', () => {
+        if (latestVending) {
+          renderMarketTracking(latestVending);
+        }
+      });
+
+      // Event listener for toggle
+      elOthersFilterToggle.addEventListener('change', () => {
+        showOnlyMatchingItems = elOthersFilterToggle.checked;
+        saveFilterState();
+        if (latestVending) {
+          renderMarketTracking(latestVending);
+        }
+      });
+
+      document.querySelectorAll('.panel .panel-header').forEach((header) => {
+        header.addEventListener('click', () => {
+          const panel = header.closest('.panel');
+          if (!panel) return;
+          const open = panel.getAttribute('data-open') === 'true';
+          panel.setAttribute('data-open', open ? 'false' : 'true');
+        });
+      });
+
+      document.addEventListener('click', (event) => {
+        const focusButton = event.target.closest('[data-focus-machine]');
+        if (focusButton) {
+          event.preventDefault();
+          focusMachineOnMap(focusButton.dataset.focusMachine);
+          return;
+        }
+        const claimButton = event.target.closest('[data-claim-machine]');
+        if (claimButton) {
+          event.preventDefault();
+          const machineId = claimButton.dataset.claimMachine;
+          if (!machineId) return;
+          const claim = claimsMap.get(String(machineId));
+          elClaimMachineId.value = machineId;
+          elClaimFeedback.textContent = '';
+          const payload = claim ? { machineId, release: true } : { machineId };
+          updateOwnership(payload);
+        }
+      });
+
+      function fitMapToViewport() {
+        if (!mapMeta) return;
+        const rect = elMapWrap.getBoundingClientRect();
+        const scale = Math.min(rect.width / mapMeta.width, rect.height / mapMeta.height);
+        state.scale = scale;
+        state.x = (rect.width - mapMeta.width * scale) / 2;
+        state.y = (rect.height - mapMeta.height * scale) / 2;
+        applyTransform();
+      }
+
+      async function loadMap() {
         try {
           const res = await fetch('/api/map');
           if (!res.ok) throw new Error('Failed to load map');
@@ -239,14 +1662,53 @@
           elMapImg.onload = () => {
             fitMapToViewport();
             const factor = Math.min(Math.pow(1.1, 10), 3 / state.scale);
-            const cx = mapMeta.width / 2, cy = mapMeta.height / 2;
+            const cx = mapMeta.width / 2;
+            const cy = mapMeta.height / 2;
             zoomToImagePoint(cx, cy, factor);
           };
         } catch {}
       }
-      async function load(){ elRefresh.disabled=true; elStatus.textContent='Loading…'; clearError(); try { await fetchInfo(); const res=await fetch('/api/vending-machines'); if (!res.ok) throw new Error('Request failed'); const data=await res.json(); elStatus.textContent=`${data.count} vending machines`; renderList(data); renderMarkers(data); buildSearchIndex(data); renderSearchResults(elSearch.value); } catch (e) { showError(e.message||String(e)); elStatus.textContent='Failed to load'; } finally { elRefresh.disabled=false; } }
+
+      async function load() {
+        elRefresh.disabled = true;
+        elStatus.textContent = 'Loading…';
+        clearError();
+        try {
+          await fetchInfo();
+          const res = await fetch('/api/vending-machines');
+          if (!res.ok) throw new Error('Request failed');
+          const data = await res.json();
+          elStatus.textContent = `${data.count} vending machines`;
+          renderMarkers(data);
+          buildSearchIndex(data);
+          renderSearchResults(elSearch.value);
+          loadClaims();
+          renderMarketTracking(data);
+          updateManualItemList(searchIndex);
+        } catch (error) {
+          showError(error.message || String(error));
+          elStatus.textContent = 'Failed to load';
+        } finally {
+          elRefresh.disabled = false;
+        }
+      }
+
       elRefresh.addEventListener('click', load);
-      loadMap().then(load); setInterval(load, 30000);
+      
+      // Initialize manual offers on page load
+      loadManualOffers();
+      renderManualOffers();
+      loadFilterState();
+      
+      Promise.all([loadMap().then(() => load())]);
+      setInterval(load, 30000);
+
+      // Auto-refresh market tracking every 30 seconds
+      setInterval(() => {
+        if (latestVending) {
+          renderMarketTracking(latestVending);
+        }
+      }, 30000);
     </script>
   </body>
-  </html>
+</html>
