@@ -1,14 +1,3 @@
 {
-  "claims": {
-    "403320254": {
-      "ownerId": "owned",
-      "claimedAt": "2025-11-14T23:47:56.884Z",
-      "metadata": null
-    },
-    "403321777": {
-      "ownerId": "owned",
-      "claimedAt": "2025-11-14T23:36:12.511Z",
-      "metadata": null
-    }
-  }
+  "claims": {}
 }

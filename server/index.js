@@ -188,10 +188,20 @@ app.post('/api/market/claim', async (req, res) => {
       if (!removed) {
         return res.status(404).json({ success: false, error: 'Machine was not owned' });
       }
+      
+      // Wait for the write operation to complete before clearing caches
+      await claimsStore.waitForWriteComplete();
+      
       clearMarketCaches();
       // Force immediate invalidation of the vending cache when ownership is released
       cache.vending.at = 0;
-      return res.json({ success: true, message: 'Ownership released', machineId: normalizedId });
+      
+      return res.json({
+        success: true,
+        message: 'Ownership released',
+        machineId: normalizedId,
+        writeComplete: true
+      });
     }
     
     // Otherwise, take ownership of the machine (without requiring Owner ID)
@@ -200,15 +210,28 @@ app.post('/api/market/claim', async (req, res) => {
       claimedAt: new Date().toISOString(),
       metadata: metadata || null,
     });
+    
+    // Wait for the write operation to complete before clearing caches
+    await claimsStore.waitForWriteComplete();
+    
     clearMarketCaches();
-    return res.json({ success: true, claim: { machineId: normalizedId, ...claim } });
+    
+    return res.json({
+      success: true,
+      claim: { machineId: normalizedId, ...claim },
+      writeComplete: true
+    });
   } catch (e) {
+    console.error('Error in /api/market/claim:', e);
     res.status(500).json({ success: false, error: String(e && e.message || e) });
   }
 });
 
 app.get('/api/market/claims', async (req, res) => {
   try {
+    // Ensure any ongoing write operations are complete before reading
+    await claimsStore.waitForWriteComplete();
+    
     const [claims, vending] = await Promise.all([claimsStore.getAllClaims(), getVendingPayload()]);
     const machineMap = new Map((vending.machines || []).map((machine) => [
       normalizeMachineId(machine.id),
@@ -224,8 +247,15 @@ app.get('/api/market/claims', async (req, res) => {
         claim: { ...claim },
       };
     });
-    res.json({ success: true, count: entries.length, claims: entries });
+    
+    res.json({
+      success: true,
+      count: entries.length,
+      claims: entries,
+      writeComplete: true
+    });
   } catch (e) {
+    console.error('Error in /api/market/claims:', e);
     res.status(500).json({ success: false, error: String(e && e.message || e) });
   }
 });

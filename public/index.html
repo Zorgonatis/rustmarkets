@@ -2198,25 +2198,69 @@
           .join('');
       }
 
-      async function loadClaims() {
+      async function loadClaims(retryCount = 0) {
         elClaimsStatus.textContent = 'Loading owned machines…';
+        const maxRetries = 3;
+        
         try {
           const res = await fetch('/api/market/claims');
-          if (!res.ok) throw new Error('Failed to load claims');
+          if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Failed to load claims (${res.status}): ${errorText}`);
+          }
+          
           const data = await res.json();
+          if (!data.success) {
+            throw new Error(data.error || 'Server reported failure');
+          }
+          
           marketClaims = Array.isArray(data.claims) ? data.claims : [];
           renderClaims();
           elClaimsStatus.textContent = `Showing ${marketClaims.length} owned machine(s)`;
           if (activePopupMachineId) {
             showPopupFor(activePopupMachineId);
           }
+          
+          // Reset any error state
+          elClaimsStatus.style.color = '';
+          
         } catch (error) {
-          elClaimsStatus.textContent = 'Unable to load owned machines';
-          elClaimsList.innerHTML = `<div class="muted">Error: ${escapeHtml(error.message)}</div>`;
+          console.error('Error loading claims:', error);
+          
+          if (retryCount < maxRetries) {
+            // Exponential backoff retry
+            const delay = Math.pow(2, retryCount) * 1000;
+            elClaimsStatus.textContent = `Retrying... (${retryCount + 1}/${maxRetries})`;
+            elClaimsStatus.style.color = '#f59e0b';
+            
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return loadClaims(retryCount + 1);
+          } else {
+            // Final failure
+            elClaimsStatus.textContent = 'Unable to load owned machines';
+            elClaimsStatus.style.color = '#ef4444';
+            
+            let errorMessage = error.message;
+            if (errorMessage.includes('Failed to load claims')) {
+              errorMessage = 'Server temporarily unavailable. Please try the refresh button.';
+            }
+            
+            elClaimsList.innerHTML = `
+              <div class="muted" style="color: #ef4444;">
+                <strong>Error:</strong> ${escapeHtml(errorMessage)}<br>
+                <small>Tip: Try clicking the "Refresh list" button in a moment.</small>
+              </div>
+            `;
+          }
         }
       }
 
-      elClaimsRefresh.addEventListener('click', () => loadClaims());
+      elClaimsRefresh.addEventListener('click', () => {
+        // Reset any error state and reload
+        elClaimsStatus.style.color = '';
+        elClaimsStatus.textContent = 'Refreshing...';
+        loadClaims();
+      });
 
       async function loadFreshVendingData(forceRefresh = false) {
         try {
@@ -2240,6 +2284,13 @@
 
       async function updateOwnership(payload) {
         elClaimFeedback.textContent = 'Updating ownership…';
+        elClaimFeedback.style.color = '';
+        
+        // Disable claim form during operation to prevent multiple rapid submissions
+        const submitButton = elClaimForm.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.textContent = 'Processing…';
         
         try {
           const res = await fetch('/api/market/claim', {
@@ -2247,30 +2298,65 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
           });
+          
           const data = await res.json();
-          if (!res.ok || data.success === false) throw new Error(data.error || 'Failed to update ownership');
+          
+          if (!res.ok || data.success === false) {
+            throw new Error(data.error || `Server error (${res.status})`);
+          }
+          
+          // Verify that the write operation completed on the server side
+          if (!data.writeComplete) {
+            console.warn('Server reported write may not be complete, proceeding with caution');
+          }
+          
           elClaimFeedback.textContent = data.message || 'Ownership updated';
+          elClaimFeedback.style.color = '#22c55e';
           clearClaimForm();
           
-          // Enhanced flow: Load claims first, then refresh all data with proper synchronization
+          // Synchronized flow: Wait briefly, then reload claims with retry logic
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          // Load claims with retry mechanism
           await loadClaims();
           
-          // Add small timeout to ensure UI state consistency after claims update
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // Additional delay to ensure server has fully processed the change
+          await new Promise(resolve => setTimeout(resolve, 300));
           
           // Force fresh data reload that bypasses cache
           await loadFreshVendingData(true);
           
-          // Additional timeout to ensure undercut detection uses fresh data
+          // Final timeout to ensure undercut detection uses fresh data
           setTimeout(() => {
             if (latestVending) {
               renderMarketTracking(latestVending);
             }
-          }, 200);
+          }, 500);
           
         } catch (error) {
           console.error('Error in updateOwnership:', error);
           elClaimFeedback.textContent = `Error: ${error.message}`;
+          elClaimFeedback.style.color = '#ef4444';
+          
+          // For network errors, suggest retry
+          if (error.message.includes('fetch') || error.message.includes('network')) {
+            setTimeout(() => {
+              elClaimFeedback.innerHTML = `Error: ${escapeHtml(error.message)}<br><small>Check your connection and try again.</small>`;
+            }, 1000);
+          }
+          
+        } finally {
+          // Re-enable the form
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
+          
+          // Clear success message after 3 seconds
+          if (elClaimFeedback.style.color === '#22c55e') {
+            setTimeout(() => {
+              elClaimFeedback.textContent = '';
+              elClaimFeedback.style.color = '';
+            }, 3000);
+          }
         }
       }
 
