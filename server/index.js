@@ -159,7 +159,8 @@ app.get('/api/info', async (req, res) => {
 
 app.get('/api/vending-machines', async (req, res) => {
   try {
-    const payload = await getVendingPayload();
+    const force = 'force' in req.query;
+    const payload = await getVendingPayload(force);
     res.json(payload);
   } catch (e) {
     res.status(500).json({ error: String(e && e.message || e) });
@@ -181,19 +182,21 @@ app.post('/api/market/claim', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Unknown vending machine' });
     }
     
-    // If release flag is true, remove the claim
+    // If release flag is true, remove the ownership
     if (release === true) {
       const removed = await claimsStore.removeClaim(normalizedId);
       if (!removed) {
-        return res.status(404).json({ success: false, error: 'Machine was not claimed' });
+        return res.status(404).json({ success: false, error: 'Machine was not owned' });
       }
       clearMarketCaches();
-      return res.json({ success: true, message: 'Claim removed', machineId: normalizedId });
+      // Force immediate invalidation of the vending cache when ownership is released
+      cache.vending.at = 0;
+      return res.json({ success: true, message: 'Ownership released', machineId: normalizedId });
     }
     
-    // Otherwise, claim the machine (without requiring Owner ID)
+    // Otherwise, take ownership of the machine (without requiring Owner ID)
     const claim = await claimsStore.setClaim(normalizedId, {
-      ownerId: 'claimed', // Simple placeholder since Owner ID is not required
+      ownerId: 'owned', // Simple placeholder since Owner ID is not required
       claimedAt: new Date().toISOString(),
       metadata: metadata || null,
     });

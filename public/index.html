@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Vending Machines</title>
+    <title>RustMarket Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -65,14 +65,19 @@
         gap: 12px;
         position: sticky;
         top: 20px;
-        align-self: flex-start;
+        align-self: stretch;
+        height: calc(100vh - 120px);
+        max-height: calc(100vh - 120px);
       }
+      
       @media (max-width: 1180px) {
         .dashboard-layout {
           flex-direction: column;
         }
         .sidebar {
           position: static;
+          height: auto;
+          max-height: none;
         }
       }
       .map-header {
@@ -117,6 +122,10 @@
         border: 1px solid #1f2430;
         background: var(--card);
         overflow: visible;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
       }
       .panel-header {
         width: 100%;
@@ -140,6 +149,10 @@
         padding: 16px;
         overflow: visible;
         position: relative;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
       }
       .panel[data-open="false"] .panel-body {
         display: none;
@@ -251,8 +264,9 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
-        max-height: 260px;
+        flex: 1;
         overflow: auto;
+        min-height: 0;
       }
       .panel-list-header {
         font-size: 11px;
@@ -403,6 +417,11 @@
       }
       .tracking-filter {
         display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .tracking-filter-row {
+        display: flex;
         flex-wrap: wrap;
         gap: 8px;
         align-items: center;
@@ -416,6 +435,11 @@
         color: var(--text);
         padding: 0 10px;
         font-size: 13px;
+        min-width: 120px;
+      }
+      .tracking-filter .autocomplete-container {
+        flex: 1;
+        min-width: 200px;
       }
       .tracking-panels {
         display: grid;
@@ -492,6 +516,111 @@
       .manual-entry .form-actions {
         padding-top: 6px;
       }
+      .autocomplete-container {
+        position: relative;
+      }
+      .autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #0f141d;
+        border: 1px solid #1f2635;
+        border-radius: 10px;
+        max-height: 260px;
+        overflow-y: auto;
+        z-index: 100;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+        display: none;
+      }
+      .autocomplete-dropdown.active {
+        display: block;
+      }
+      .autocomplete-item {
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #1a1f2e;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        transition: background-color 0.15s ease;
+      }
+      .autocomplete-item:last-child {
+        border-bottom: none;
+      }
+      .autocomplete-item:hover,
+      .autocomplete-item.selected {
+        background: #131826;
+      }
+      .autocomplete-item-name {
+        font-weight: 600;
+        color: var(--text);
+      }
+      .autocomplete-item-details {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .autocomplete-item-highlight {
+        color: #22c55e;
+        font-weight: 600;
+      }
+      .form-error {
+        background: #2b1517;
+        border: 1px solid #3a1b1d;
+        color: #f87171;
+        padding: 6px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        margin-top: 4px;
+        display: none;
+      }
+      .form-error.active {
+        display: block;
+      }
+      .quick-add-section {
+        border-top: 1px solid #1f2430;
+        padding-top: 10px;
+        margin-top: 10px;
+      }
+      .quick-add-title {
+        font-size: 11px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      .quick-add-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .quick-add-chip {
+        background: #1a2332;
+        border: 1px solid #2a3444;
+        color: #a7c5ff;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .quick-add-chip:hover {
+        background: #223041;
+        border-color: #3a4858;
+        transform: translateY(-1px);
+      }
+      .validation-hint {
+        font-size: 10px;
+        color: var(--muted);
+        margin-top: 2px;
+        height: 12px;
+      }
+      .validation-hint.error {
+        color: #f87171;
+      }
+      .validation-hint.success {
+        color: #22c55e;
+      }
       #mapWrap {
         cursor: grab;
       }
@@ -564,11 +693,178 @@
         color: #c0c9d9;
         text-align: right;
       }
+      .undercut-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        background: #1a1f2e;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .undercut-table th,
+      .undercut-table td {
+        padding: 8px 10px;
+        text-align: left;
+        border-bottom: 1px solid #2a3444;
+      }
+      .undercut-table th {
+        background: #232937;
+        font-size: 11px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        color: #aab4c4;
+        font-weight: 600;
+      }
+      .undercut-table tr:last-child td {
+        border-bottom: none;
+      }
+      .undercut-table .your-offer {
+        color: #22c55e;
+        font-weight: 600;
+      }
+      .undercut-table .best-offer {
+        color: #f87171;
+        font-weight: 600;
+      }
+      .undercut-banner {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        border: 2px solid #f87171;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        animation: pulse-warning 2s infinite;
+      }
+      .banner-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .banner-icon {
+        font-size: 24px;
+        animation: bounce-warning 1s infinite;
+      }
+      .banner-text {
+        color: white;
+      }
+      .banner-subtitle {
+        font-size: 12px;
+        opacity: 0.9;
+        margin-top: 2px;
+      }
+      @keyframes pulse-warning {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+      }
+      @keyframes bounce-warning {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+      .undercut-table .focus-btn {
+        background: #233041;
+        color: #a7c5ff;
+        border: 1px solid #2a3850;
+        padding: 3px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .undercut-table .focus-btn:hover {
+        background: #2a3850;
+      }
+      .item-group {
+        border: 1px solid #1f2430;
+        border-radius: 10px;
+        background: #0f141f;
+        margin-bottom: 8px;
+        overflow: hidden;
+      }
+      .item-group-header {
+        padding: 10px 12px;
+        background: #161a22;
+        border-bottom: 1px solid #1f2430;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .item-group-header:hover {
+        background: #1a1f2e;
+      }
+      .item-group-header .item-name {
+        font-weight: 600;
+        color: var(--text);
+      }
+      .item-group-header .offer-count {
+        font-size: 12px;
+        color: var(--muted);
+        background: #1a1f2e;
+        padding: 2px 8px;
+        border-radius: 12px;
+      }
+      .item-group-chevron {
+        color: var(--muted);
+        transition: transform 0.2s ease;
+        font-size: 12px;
+      }
+      .item-group.expanded .item-group-chevron {
+        transform: rotate(180deg);
+      }
+      .item-group-offers {
+        display: none;
+        padding: 8px;
+      }
+      .item-group.expanded .item-group-offers {
+        display: block;
+      }
+      .offer-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 10px;
+        border-radius: 6px;
+        margin-bottom: 4px;
+        background: #0a0e14;
+        border: 1px solid #1a1f2e;
+      }
+      .offer-row:last-child {
+        margin-bottom: 0;
+      }
+      .offer-row-details {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .offer-row-details small {
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .offer-row-actions {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .focus-offer-btn {
+        background: #233041;
+        color: #a7c5ff;
+        border: 1px solid #2a3850;
+        padding: 3px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .focus-offer-btn:hover {
+        background: #2a3850;
+      }
     </style>
   </head>
   <body>
     <header>
-      <h1>Vending Machines</h1>
+      <h1>RustMarket Tracker</h1>
       <span id="serverName" class="muted"></span>
     </header>
     <main>
@@ -614,23 +910,51 @@
                 <div class="tracking-title">Market Tracking</div>
                 <div class="tracking-filter">
                   <label for="trackingCurrency" class="muted" style="font-size:11px;letter-spacing:0.3px;text-transform:uppercase;">Currency</label>
-                  <select id="trackingCurrency">
-                    <option value="all">All</option>
-                    <option value="scrap">Scrap</option>
-                    <option value="hqm">High Quality Metal</option>
-                    <option value="other">Other…</option>
-                  </select>
-                  <input id="trackingCurrencyOther" placeholder="Custom currency" style="display:none;" />
+                  <div class="tracking-filter-row">
+                    <select id="trackingCurrency" style="min-width: 120px;">
+                      <option value="all">All</option>
+                      <option value="scrap">Scrap</option>
+                      <option value="hqm">High Quality Metal</option>
+                      <option value="other">Other…</option>
+                    </select>
+                    <div id="trackingCurrencyOtherContainer" class="autocomplete-container" style="display:none;flex: 1;min-width: 200px; position: relative;">
+                      <input
+                        id="trackingCurrencyOther"
+                        placeholder="Start typing currency name…"
+                        autocomplete="off"
+                        style="width: 100%;"
+                      />
+                      <div id="trackingCurrencyOtherDropdown" class="autocomplete-dropdown"></div>
+                      <div id="trackingCurrencyOtherError" class="form-error"></div>
+                      <div id="trackingCurrencyOtherCheckmark" class="checkmark-indicator" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); opacity: 0; transition: opacity 0.3s ease; font-size: 16px;">✓</div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <button type="button" id="trackingRefresh">Refresh tracking</button>
             </div>
+            <div id="undercutBanner" class="undercut-banner" style="display:none;">
+              <div class="banner-content">
+                <div class="banner-icon">⚠️</div>
+                <div class="banner-text">
+                  <strong>Your offers are being undercut!</strong>
+                  <div class="banner-subtitle">Competing offers found at lower prices</div>
+                </div>
+              </div>
+            </div>
             <div id="trackingWarning" class="tracking-warning" style="display:none;"></div>
+            <div id="trackingWarningTable" style="display:none; margin-top: 12px;"></div>
             <div class="tracking-panels">
               <div class="tracking-panel">
                 <div class="tracking-panel-header">
                   <span>My Offers</span>
-                  <span class="muted" id="myOffersSummary">No offers yet</span>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; color: var(--muted);">
+                      <input type="checkbox" id="myOffersStockToggle" style="margin: 0;">
+                      <span>Include out of stock</span>
+                    </label>
+                    <span class="muted" id="myOffersSummary">No offers yet</span>
+                  </div>
                 </div>
                 <div class="tracking-panel-body" id="myOffersBody">
                   <div class="muted">Your owned vending machines will populate this view.</div>
@@ -639,37 +963,98 @@
                   <p class="muted" style="font-size:12px;margin:0;">
                     No owned vending machines detected. Add manual offers via search.
                   </p>
+                  
                   <div class="field">
                     <label for="manualItem">Item</label>
-                    <input id="manualItem" list="manualItemList" placeholder="Start typing to search…" />
-                    <datalist id="manualItemList"></datalist>
+                    <div class="autocomplete-container">
+                      <input
+                        id="manualItem"
+                        placeholder="Start typing to search items…"
+                        autocomplete="off"
+                        style="width: 100%;"
+                      />
+                      <div id="manualItemDropdown" class="autocomplete-dropdown"></div>
+                      <div id="manualItemError" class="form-error"></div>
+                      <div id="manualItemHint" class="validation-hint"></div>
+                    </div>
                   </div>
+                  
                   <div class="field">
                     <label for="manualCurrency">Currency</label>
-                    <input id="manualCurrency" placeholder="Currency name or ID" />
+                    <div class="autocomplete-container">
+                      <input
+                        id="manualCurrency"
+                        placeholder="Currency name or ID"
+                        autocomplete="off"
+                        style="width: 100%;"
+                      />
+                      <div id="manualCurrencyDropdown" class="autocomplete-dropdown"></div>
+                      <div id="manualCurrencyError" class="form-error"></div>
+                      <div id="manualCurrencyHint" class="validation-hint"></div>
+                    </div>
                   </div>
+                  
                   <div class="field">
                     <label for="manualCost">Cost per item</label>
-                    <input id="manualCost" type="number" min="0" step="0.01" placeholder="Cost" />
+                    <input
+                      id="manualCost"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="Enter cost amount"
+                      style="width: 100%;"
+                    />
+                    <div id="manualCostError" class="form-error"></div>
+                    <div id="manualCostHint" class="validation-hint"></div>
                   </div>
+                  
                   <div class="field">
                     <label for="manualStock">Stock</label>
-                    <input id="manualStock" type="number" min="0" step="1" placeholder="Amount in stock" />
+                    <input
+                      id="manualStock"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="Amount in stock (optional)"
+                      style="width: 100%;"
+                    />
+                    <div id="manualStockError" class="form-error"></div>
+                    <div id="manualStockHint" class="validation-hint"></div>
                   </div>
+                  
                   <div class="form-actions">
-                    <button type="button" id="manualAdd">Add manual offer</button>
+                    <button type="button" id="manualAdd" class="primary">Add manual offer</button>
+                    <button type="button" id="manualClear" class="ghost">Clear form</button>
+                  </div>
+                  
+                  <div class="quick-add-section">
+                    <div class="quick-add-title">Quick add common items:</div>
+                    <div class="quick-add-chips" id="quickAddChips">
+                      <button class="quick-add-chip" data-item="Scrap" data-currency="Scrap">Scrap</button>
+                      <button class="quick-add-chip" data-item="High Quality Metal" data-currency="High Quality Metal">HQM</button>
+                      <button class="quick-add-chip" data-item="Metal Fragments" data-currency="Scrap">Metal Fragments</button>
+                      <button class="quick-add-chip" data-item="Stones" data-currency="Scrap">Stones</button>
+                      <button class="quick-add-chip" data-item="Wood" data-currency="Scrap">Wood</button>
+                      <button class="quick-add-chip" data-item="Cloth" data-currency="Scrap">Cloth</button>
+                    </div>
                   </div>
                 </div>
               </div>
               <div class="tracking-panel">
                 <div class="tracking-panel-header">
                   <span>Others</span>
-                  <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; color: var(--muted);">
+                        <input type="checkbox" id="othersFilterToggle" style="margin: 0;">
+                        <span>Match my offers</span>
+                      </label>
+                      <span class="muted" id="othersSummary">No offers yet</span>
+                    </div>
                     <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; color: var(--muted);">
-                      <input type="checkbox" id="othersFilterToggle" style="margin: 0;">
-                      <span>Match my offers</span>
+                      <input type="checkbox" id="othersStockToggle" style="margin: 0;">
+                      <span>Include out of stock</span>
                     </label>
-                    <span class="muted" id="othersSummary">No offers yet</span>
                   </div>
                 </div>
                 <div class="tracking-panel-body" id="othersBody">
@@ -686,9 +1071,24 @@
               <span class="chevron">▾</span>
             </button>
             <div class="panel-body">
-              <div id="claimsStatus" class="panel-status">Loading claims…</div>
+              <div id="claimsStatus" class="panel-status">Loading owned machines…</div>
               <div id="claimsList" class="panel-list"></div>
               <form id="claimForm">
+                <div class="field">
+                  <label for="claimMachineName">Machine Name (Lookup)</label>
+                  <div class="autocomplete-container">
+                    <input
+                      id="claimMachineName"
+                      name="machineName"
+                      placeholder="Start typing machine name…"
+                      autocomplete="off"
+                      style="width: 100%;"
+                    />
+                    <div id="claimMachineNameDropdown" class="autocomplete-dropdown"></div>
+                    <div id="claimMachineNameError" class="form-error"></div>
+                    <div id="claimMachineNameHint" class="validation-hint"></div>
+                  </div>
+                </div>
                 <div class="field">
                   <label for="claimMachineId">Machine ID</label>
                   <input
@@ -697,9 +1097,10 @@
                     placeholder="Enter machine identifier"
                     required
                   />
+                  <div id="claimMachineIdHint" class="validation-hint" style="font-size: 10px; color: var(--muted); margin-top: 2px; height: 12px;"></div>
                 </div>
                 <div class="form-actions">
-                  <button type="submit">Submit claim</button>
+                  <button type="submit">Take ownership</button>
                   <button type="button" id="claimsRefresh" class="ghost">Refresh list</button>
                 </div>
                 <div id="claimFeedback" class="muted" aria-live="polite" style="min-height:18px"></div>
@@ -732,11 +1133,13 @@
       const elClaimsStatus = document.getElementById('claimsStatus');
       const elClaimsRefresh = document.getElementById('claimsRefresh');
       const elClaimForm = document.getElementById('claimForm');
+      const elClaimMachineName = document.getElementById('claimMachineName');
       const elClaimMachineId = document.getElementById('claimMachineId');
       const elClaimFeedback = document.getElementById('claimFeedback');
  
       const elTrackingCurrency = document.getElementById('trackingCurrency');
       const elTrackingCurrencyOther = document.getElementById('trackingCurrencyOther');
+      const elTrackingCurrencyOtherContainer = document.getElementById('trackingCurrencyOtherContainer');
       const elMyOffersBody = document.getElementById('myOffersBody');
       const elMyOffersSummary = document.getElementById('myOffersSummary');
       const elOthersBody = document.getElementById('othersBody');
@@ -750,33 +1153,578 @@
       const elManualItemList = document.getElementById('manualItemList');
       const elTrackingRefresh = document.getElementById('trackingRefresh');
       const elOthersFilterToggle = document.getElementById('othersFilterToggle');
+      const elMyOffersStockToggle = document.getElementById('myOffersStockToggle');
+      const elOthersStockToggle = document.getElementById('othersStockToggle');
+      const elTrackingWarningTable = document.getElementById('trackingWarningTable');
+      const elUndercutBanner = document.getElementById('undercutBanner');
       
-      // DEBUG: Check if manualAdd element exists and log timing
-      console.log('DEBUG: Checking for manualAdd element...');
+      // New enhanced manual entry elements
+      const elManualItemDropdown = document.getElementById('manualItemDropdown');
+      const elManualCurrencyDropdown = document.getElementById('manualCurrencyDropdown');
+      const elManualItemError = document.getElementById('manualItemError');
+      const elManualCurrencyError = document.getElementById('manualCurrencyError');
+      const elManualCostError = document.getElementById('manualCostError');
+      const elManualStockError = document.getElementById('manualStockError');
+      const elManualItemHint = document.getElementById('manualItemHint');
+      const elManualCurrencyHint = document.getElementById('manualCurrencyHint');
+      const elManualCostHint = document.getElementById('manualCostHint');
+      const elManualStockHint = document.getElementById('manualStockHint');
+      const elManualClear = document.getElementById('manualClear');
+      const elQuickAddChips = document.getElementById('quickAddChips');
+      
+      // New machine name lookup elements
+      const elClaimMachineNameDropdown = document.getElementById('claimMachineNameDropdown');
+      const elClaimMachineNameError = document.getElementById('claimMachineNameError');
+      const elClaimMachineNameHint = document.getElementById('claimMachineNameHint');
+      const elClaimMachineIdHint = document.getElementById('claimMachineIdHint');
+      
+      // New smart currency lookup elements
+      const elTrackingCurrencyOtherDropdown = document.getElementById('trackingCurrencyOtherDropdown');
+      const elTrackingCurrencyOtherError = document.getElementById('trackingCurrencyOtherError');
+      const elTrackingCurrencyOtherCheckmark = document.getElementById('trackingCurrencyOtherCheckmark');
+      
       const elManualAdd = document.getElementById('manualAdd');
-      console.log('DEBUG: elManualAdd element:', elManualAdd);
-      console.log('DEBUG: manualEntry element:', elManualEntry);
-      console.log('DEBUG: manualEntry display style:', elManualEntry ? elManualEntry.style.display : 'not found');
  
       const manualOffers = [];
       let currencyFilter = { type: 'all', custom: '' };
       let showOnlyMatchingItems = false;
+      let includeOutOfStockMyOffers = false;
+      let includeOutOfStockOthers = false;
       const chimeAudio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
       chimeAudio.volume = 0.2;
  
-      function updateManualItemList(searchIndex) {
-        if (!elManualItemList) return;
-        const seen = new Set();
-        const entries = [];
-        for (const entry of searchIndex) {
-          const label = entry.item || entry.itemName || `Item ${entry.itemId ?? ''}`;
-          if (!label) continue;
-          if (seen.has(label)) continue;
-          seen.add(label);
-          entries.push(`<option value="${escapeHtml(label)}"></option>`);
-          if (entries.length >= 40) break;
+      // Enhanced Manual Entry System with Smart Autocomplete
+      class SmartAutocomplete {
+        constructor(inputElement, dropdownElement, errorElement, hintElement, options = {}) {
+          this.input = inputElement;
+          this.dropdown = dropdownElement;
+          this.error = errorElement;
+          this.hint = hintElement;
+          this.options = {
+            minQueryLength: options.minQueryLength || 1,
+            maxResults: options.maxResults || 50,
+            debounceMs: options.debounceMs || 150,
+            ...options
+          };
+          
+          this.currentResults = [];
+          this.selectedIndex = -1;
+          this.debounceTimer = null;
+          this.selectedItem = null;
+          
+          this.setupEventListeners();
         }
-        elManualItemList.innerHTML = entries.join('');
+        
+        setupEventListeners() {
+          // Input events
+          this.input.addEventListener('input', (e) => this.handleInput(e));
+          this.input.addEventListener('focus', () => this.handleFocus());
+          this.input.addEventListener('blur', () => this.handleBlur());
+          this.input.addEventListener('keydown', (e) => this.handleKeyDown(e));
+          
+          // Dropdown events
+          this.dropdown.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+        }
+        
+        handleInput(e) {
+          const query = e.target.value.trim();
+          this.clearError();
+          this.clearHint();
+          
+          if (query.length < this.options.minQueryLength) {
+            this.hide();
+            this.selectedItem = null;
+            return;
+          }
+          
+          clearTimeout(this.debounceTimer);
+          this.debounceTimer = setTimeout(() => {
+            this.search(query);
+          }, this.options.debounceMs);
+        }
+        
+        handleFocus() {
+          const query = this.input.value.trim();
+          if (query.length >= this.options.minQueryLength) {
+            this.search(query);
+          }
+        }
+        
+        handleBlur() {
+          // Delay hiding to allow click events on dropdown
+          setTimeout(() => this.hide(), 150);
+        }
+        
+        handleKeyDown(e) {
+          if (!this.isVisible()) return;
+          
+          switch (e.key) {
+            case 'ArrowDown':
+              e.preventDefault();
+              this.selectNext();
+              break;
+            case 'ArrowUp':
+              e.preventDefault();
+              this.selectPrevious();
+              break;
+            case 'Enter':
+              e.preventDefault();
+              this.selectCurrent();
+              break;
+            case 'Escape':
+              e.preventDefault();
+              this.hide();
+              break;
+          }
+        }
+        
+        handleMouseDown(e) {
+          const item = e.target.closest('.autocomplete-item');
+          if (item) {
+            e.preventDefault();
+            this.selectItem(item.dataset.index);
+          }
+        }
+        
+        async search(query) {
+          if (!this.options.searchFn) {
+            return;
+          }
+          
+          try {
+            const results = await this.options.searchFn(query);
+            this.currentResults = results.slice(0, this.options.maxResults);
+            this.selectedIndex = -1;
+            this.render();
+          } catch (error) {
+            this.showError('Search failed. Please try again.');
+          }
+        }
+        
+        render() {
+          if (this.currentResults.length === 0) {
+            this.showNoResults();
+            return;
+          }
+          
+          const html = this.currentResults.map((item, index) => this.renderItem(item, index)).join('');
+          this.dropdown.innerHTML = html;
+          this.show();
+        }
+        
+        renderItem(item, index) {
+          const highlight = (text) => {
+            const query = this.input.value.trim();
+            if (!query) return escapeHtml(text);
+            const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
+            return escapeHtml(text).replace(regex, '<span class="autocomplete-item-highlight">$1</span>');
+          };
+          
+          return `
+            <div class="autocomplete-item" data-index="${index}">
+              <div class="autocomplete-item-name">${highlight(item.name)}</div>
+              ${item.details ? `<div class="autocomplete-item-details">${item.details}</div>` : ''}
+            </div>
+          `;
+        }
+        
+        showNoResults() {
+          this.dropdown.innerHTML = `
+            <div class="autocomplete-item" style="color: var(--muted); cursor: default;">
+              No results found
+            </div>
+          `;
+          this.show();
+        }
+        
+        selectNext() {
+          if (this.currentResults.length === 0) return;
+          this.selectedIndex = (this.selectedIndex + 1) % this.currentResults.length;
+          this.updateSelection();
+        }
+        
+        selectPrevious() {
+          if (this.currentResults.length === 0) return;
+          this.selectedIndex = this.selectedIndex <= 0 ? this.currentResults.length - 1 : this.selectedIndex - 1;
+          this.updateSelection();
+        }
+        
+        selectCurrent() {
+          if (this.selectedIndex >= 0 && this.selectedIndex < this.currentResults.length) {
+            this.selectItem(this.selectedIndex);
+          }
+        }
+        
+        selectItem(index) {
+          const item = this.currentResults[index];
+          if (!item) return;
+          
+          this.selectedItem = item;
+          this.input.value = item.name;
+          this.hide();
+          this.showSuccess('Item selected');
+          
+          if (this.options.onSelect) {
+            this.options.onSelect(item);
+          }
+        }
+        
+        updateSelection() {
+          const items = this.dropdown.querySelectorAll('.autocomplete-item');
+          items.forEach((item, index) => {
+            if (index === this.selectedIndex) {
+              item.classList.add('selected');
+              item.scrollIntoView({ block: 'nearest' });
+            } else {
+              item.classList.remove('selected');
+            }
+          });
+        }
+        
+        show() {
+          this.dropdown.classList.add('active');
+        }
+        
+        hide() {
+          this.dropdown.classList.remove('active');
+          this.selectedIndex = -1;
+        }
+        
+        isVisible() {
+          return this.dropdown.classList.contains('active');
+        }
+        
+        showError(message) {
+          if (this.error) {
+            this.error.textContent = message;
+            this.error.classList.add('active');
+          }
+        }
+        
+        showSuccess(message) {
+          if (this.hint) {
+            this.hint.textContent = message;
+            this.hint.classList.add('success');
+            setTimeout(() => this.clearHint(), 2000);
+          }
+        }
+        
+        clearError() {
+          if (this.error) {
+            this.error.classList.remove('active');
+            this.error.textContent = '';
+          }
+        }
+        
+        clearHint() {
+          if (this.hint) {
+            this.hint.classList.remove('success', 'error');
+            this.hint.textContent = '';
+          }
+        }
+        
+        reset() {
+          this.hide();
+          this.clearError();
+          this.clearHint();
+          this.selectedItem = null;
+          this.currentResults = [];
+          this.selectedIndex = -1;
+        }
+        
+        getSelectedItem() {
+          return this.selectedItem;
+        }
+      }
+      
+      // Utility function for regex escaping
+      function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+      
+      // Fuzzy search implementation with ranking
+      function fuzzySearch(query, items, searchFields) {
+        const normalizedQuery = query.toLowerCase().trim();
+        if (!normalizedQuery) return [];
+        
+        return items
+          .map(item => {
+            let score = 0;
+            let fieldMatches = 0;
+            
+            for (const field of searchFields) {
+              const fieldValue = String(item[field] || '').toLowerCase();
+              if (fieldValue.includes(normalizedQuery)) {
+                // Exact match gets highest score
+                if (fieldValue === normalizedQuery) {
+                  score += 100;
+                } else if (fieldValue.startsWith(normalizedQuery)) {
+                  score += 80;
+                } else {
+                  score += 60;
+                }
+                fieldMatches++;
+                
+                // Bonus for shorter field names (more specific)
+                score += Math.max(0, 20 - fieldValue.length);
+              } else if (fuzzyMatch(normalizedQuery, fieldValue)) {
+                // Fuzzy match gets lower score
+                score += 30;
+                fieldMatches++;
+              }
+            }
+            
+            return { item, score, fieldMatches };
+          })
+          .filter(result => result.fieldMatches > 0)
+          .sort((a, b) => b.score - a.score)
+          .map(result => result.item);
+      }
+      
+      // Simple fuzzy matching
+      function fuzzyMatch(query, text) {
+        let queryIndex = 0;
+        let textIndex = 0;
+        
+        while (queryIndex < query.length && textIndex < text.length) {
+          if (query[queryIndex] === text[textIndex]) {
+            queryIndex++;
+          }
+          textIndex++;
+        }
+        
+        return queryIndex === query.length;
+      }
+      
+      // Initialize smart autocomplete for items
+      let itemAutocomplete = null;
+      let currencyAutocomplete = null;
+      let machineNameAutocomplete = null;
+      let trackingCurrencyAutocomplete = null;
+      
+      function initializeAutocompletes() {
+        // Item autocomplete
+        itemAutocomplete = new SmartAutocomplete(
+          elManualItem,
+          elManualItemDropdown,
+          elManualItemError,
+          elManualItemHint,
+          {
+            minQueryLength: 1,
+            maxResults: 30,
+            searchFn: async (query) => {
+              const items = searchIndex.map(entry => ({
+                name: entry.item || entry.itemName || `Item ${entry.itemId || ''}`,
+                itemId: entry.itemId,
+                details: `ID: ${entry.itemId || 'Unknown'} · Found in ${entry.quantity} orders`
+              }));
+              
+              // Remove duplicates
+              const uniqueItems = new Map();
+              items.forEach(item => {
+                if (!uniqueItems.has(item.name)) {
+                  uniqueItems.set(item.name, item);
+                }
+              });
+              
+              return fuzzySearch(query, Array.from(uniqueItems.values()), ['name', 'details']);
+            },
+            onSelect: (item) => {
+              validateItemSelection(item);
+            }
+          }
+        );
+        
+        // Currency autocomplete
+        currencyAutocomplete = new SmartAutocomplete(
+          elManualCurrency,
+          elManualCurrencyDropdown,
+          elManualCurrencyError,
+          elManualCurrencyHint,
+          {
+            minQueryLength: 1,
+            maxResults: 20,
+            searchFn: async (query) => {
+              // Extract unique currencies from search index
+              const currencies = new Map();
+              searchIndex.forEach(entry => {
+                const currencyName = entry.currency || 'Unknown';
+                if (!currencies.has(currencyName)) {
+                  currencies.set(currencyName, {
+                    name: currencyName,
+                    details: `Used in market transactions`
+                  });
+                }
+              });
+              
+              // Add common currencies
+              const commonCurrencies = [
+                { name: 'Scrap', details: 'Common crafting material' },
+                { name: 'High Quality Metal', details: 'High-tier crafting material' },
+                { name: 'Metal Fragments', details: 'Basic crafting material' },
+                { name: 'Stones', details: 'Basic building material' },
+                { name: 'Wood', details: 'Basic building material' }
+              ];
+              
+              commonCurrencies.forEach(curr => {
+                if (!currencies.has(curr.name)) {
+                  currencies.set(curr.name, curr);
+                }
+              });
+              
+              return fuzzySearch(query, Array.from(currencies.values()), ['name', 'details']);
+            },
+            onSelect: (item) => {
+              validateCurrencySelection(item);
+            }
+          }
+        );
+        
+        // Machine Name autocomplete for Owned Machines section
+        machineNameAutocomplete = new SmartAutocomplete(
+          elClaimMachineName,
+          elClaimMachineNameDropdown,
+          elClaimMachineNameError,
+          elClaimMachineNameHint,
+          {
+            minQueryLength: 1,
+            maxResults: 30,
+            searchFn: async (query) => {
+              if (!latestVending || !latestVending.machines) {
+                return [];
+              }
+              
+              const machines = latestVending.machines.map(machine => ({
+                name: machine.name || `Vending Machine #${machine.id}`,
+                machineId: String(machine.id),
+                details: `ID: ${machine.id} · (${machine.x?.toFixed(0) || '?'}, ${machine.y?.toFixed(0) || '?'})`
+              }));
+              
+              return fuzzySearch(query, machines, ['name', 'details']);
+            },
+            onSelect: (item) => {
+              // Auto-populate the Machine ID field
+              elClaimMachineId.value = item.machineId;
+              elClaimMachineIdHint.textContent = `✓ Selected: ${item.name} (ID: ${item.machineId})`;
+              elClaimMachineIdHint.className = 'validation-hint success';
+              
+              // Clear any previous errors
+              hideFieldError(elClaimMachineNameError);
+            }
+          }
+        );
+        
+        // Smart Currency autocomplete for Market Tracking
+        trackingCurrencyAutocomplete = new SmartAutocomplete(
+          elTrackingCurrencyOther,
+          elTrackingCurrencyOtherDropdown,
+          elTrackingCurrencyOtherError,
+          null, // Using checkmark instead of hint element
+          {
+            minQueryLength: 1,
+            maxResults: 25,
+            searchFn: async (query) => {
+              // Enhanced currency data source
+              const currencies = new Map();
+              
+              // Extract currencies from search index
+              if (searchIndex.length > 0) {
+                searchIndex.forEach(entry => {
+                  const currencyName = entry.currency || 'Unknown';
+                  if (!currencies.has(currencyName) && currencyName !== 'Unknown') {
+                    currencies.set(currencyName, {
+                      name: currencyName,
+                      details: `Used in market transactions`
+                    });
+                  }
+                });
+              }
+              
+              // Add commonly used currencies with enhanced details
+              const commonCurrencies = [
+                { name: 'Scrap', details: 'Common crafting material & trading currency' },
+                { name: 'High Quality Metal', details: 'High-tier crafting material' },
+                { name: 'Metal Fragments', details: 'Basic crafting material' },
+                { name: 'Stones', details: 'Basic building material' },
+                { name: 'Wood', details: 'Basic building material' },
+                { name: 'Cloth', details: 'Crafting material' },
+                { name: 'Gunpowder', details: 'Ammunition crafting' },
+                { name: 'Low Grade Fuel', details: 'Fuel & crafting' },
+                { name: 'Animal Fat', details: 'Cooking & crafting' },
+                { name: 'Leather', details: 'Crafting material' },
+                { name: 'Rope', details: 'Crafting material' },
+                { name: 'Duct Tape', details: 'Repair material' },
+                { name: 'Gears', details: 'High-tier components' },
+                { name: 'Sheet Metal', details: 'Building material' },
+                { name: 'Tech Trash', details: 'High-tier crafting' },
+                { name: 'Road Signs', details: ' Scrap alternative' }
+              ];
+              
+              commonCurrencies.forEach(curr => {
+                if (!currencies.has(curr.name)) {
+                  currencies.set(curr.name, curr);
+                }
+              });
+              
+              return fuzzySearch(query, Array.from(currencies.values()), ['name', 'details']);
+            },
+            onSelect: (item) => {
+              // Update currency filter and show checkmark
+              currencyFilter.custom = item.name;
+              
+              // Show checkmark with fade effect
+              const checkmark = document.getElementById('trackingCurrencyOtherCheckmark');
+              if (checkmark) {
+                checkmark.style.opacity = '1';
+                setTimeout(() => {
+                  checkmark.style.opacity = '0';
+                }, 1500);
+              }
+              
+              // Trigger market tracking re-render
+              if (latestVending) {
+                renderMarketTracking(latestVending);
+              }
+              
+              hideFieldError(elTrackingCurrencyOtherError);
+            }
+          }
+        );
+      }
+      
+      function validateItemSelection(item) {
+        // Cross-validate with search index
+        const found = searchIndex.some(entry =>
+          (entry.item || entry.itemName) === item.name
+        );
+        
+        if (found) {
+          elManualItemHint.textContent = '✓ Valid item';
+          elManualItemHint.className = 'validation-hint success';
+          return true;
+        } else {
+          elManualItemHint.textContent = '⚠ Item not found in market';
+          elManualItemHint.className = 'validation-hint error';
+          return false;
+        }
+      }
+      
+      function validateCurrencySelection(item) {
+        // Check if it's a known currency
+        const knownCurrencies = ['Scrap', 'High Quality Metal', 'Metal Fragments', 'Stones', 'Wood', 'Cloth'];
+        const isKnown = knownCurrencies.some(curr =>
+          curr.toLowerCase() === item.name.toLowerCase()
+        );
+        
+        if (isKnown || searchIndex.some(entry => entry.currency === item.name)) {
+          elManualCurrencyHint.textContent = '✓ Valid currency';
+          elManualCurrencyHint.className = 'validation-hint success';
+          return true;
+        } else {
+          elManualCurrencyHint.textContent = '⚠ Unknown currency';
+          elManualCurrencyHint.className = 'validation-hint error';
+          return false;
+        }
       }
 
       function loadFilterState() {
@@ -785,10 +1733,24 @@
           showOnlyMatchingItems = JSON.parse(stored);
           elOthersFilterToggle.checked = showOnlyMatchingItems;
         }
+        
+        const storedMyStock = localStorage.getItem('marketTrackingMyStock');
+        if (storedMyStock !== null) {
+          includeOutOfStockMyOffers = JSON.parse(storedMyStock);
+          elMyOffersStockToggle.checked = includeOutOfStockMyOffers;
+        }
+        
+        const storedOthersStock = localStorage.getItem('marketTrackingOthersStock');
+        if (storedOthersStock !== null) {
+          includeOutOfStockOthers = JSON.parse(storedOthersStock);
+          elOthersStockToggle.checked = includeOutOfStockOthers;
+        }
       }
 
       function saveFilterState() {
         localStorage.setItem('marketTrackingFilter', JSON.stringify(showOnlyMatchingItems));
+        localStorage.setItem('marketTrackingMyStock', JSON.stringify(includeOutOfStockMyOffers));
+        localStorage.setItem('marketTrackingOthersStock', JSON.stringify(includeOutOfStockOthers));
       }
 
       function escapeHtml(value) {
@@ -958,7 +1920,7 @@
         const machine = latestVending.machines.find((m) => String(m.id) === String(id));
         if (!machine) return;
         const claim = claimsMap.get(String(machine.id));
-        const actionLabel = claim ? 'Release' : 'Claim';
+        const actionLabel = claim ? 'Release ownership' : 'Take ownership';
         const coordsText =
           machine.x != null && machine.y != null
             ? ` · Coords: (${machine.x.toFixed(0)}, ${machine.y.toFixed(0)})`
@@ -1198,10 +2160,12 @@
 
       function renderClaims() {
         claimsMap.clear();
+        
         if (!marketClaims.length) {
-          elClaimsList.innerHTML = '<div class="muted">No active claims.</div>';
+          elClaimsList.innerHTML = '<div class="muted">No owned machines.</div>';
           return;
         }
+        
         elClaimsList.innerHTML = marketClaims
           .map((entry) => {
             const coords = entry.x != null && entry.y != null ? `(${entry.x.toFixed(0)}, ${entry.y.toFixed(0)})` : 'Coordinates unavailable';
@@ -1221,12 +2185,12 @@
               </div>
               <div class="claim-row-meta">
                 <span>${coords}</span>
-                <span>Owner: ${escapeHtml(entry.claim?.ownerId ?? 'Unknown')}</span>
-                <span>Claimed: ${claimedAt}</span>
+                <span>Owned: ${claimedAt}</span>
               </div>
               ${metadata}
               <div class="claim-row-actions">
                 <button type="button" class="panel-link" data-focus-machine="${escapeHtml(entry.machineId)}">Focus on map</button>
+                <button type="button" class="panel-link" data-claim-machine="${escapeHtml(entry.machineId)}">Release ownership</button>
               </div>
             </div>
           `;
@@ -1254,8 +2218,29 @@
 
       elClaimsRefresh.addEventListener('click', () => loadClaims());
 
+      async function loadFreshVendingData(forceRefresh = false) {
+        try {
+          elRefresh.disabled = true;
+          // Add cache-busting parameter when forceRefresh is true
+          const url = forceRefresh ? '/api/vending-machines?force=true' : '/api/vending-machines';
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('Request failed');
+          const data = await res.json();
+          latestVending = data;
+          renderMarkers(data);
+          buildSearchIndex(data);
+          renderSearchResults(elSearch.value);
+          renderMarketTracking(data); // This will trigger undercut recalculation
+        } catch (error) {
+          showError(error.message || String(error));
+        } finally {
+          elRefresh.disabled = false;
+        }
+      }
+
       async function updateOwnership(payload) {
         elClaimFeedback.textContent = 'Updating ownership…';
+        
         try {
           const res = await fetch('/api/market/claim', {
             method: 'POST',
@@ -1265,9 +2250,26 @@
           const data = await res.json();
           if (!res.ok || data.success === false) throw new Error(data.error || 'Failed to update ownership');
           elClaimFeedback.textContent = data.message || 'Ownership updated';
-          elClaimForm.reset();
-          await load();
+          clearClaimForm();
+          
+          // Enhanced flow: Load claims first, then refresh all data with proper synchronization
+          await loadClaims();
+          
+          // Add small timeout to ensure UI state consistency after claims update
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          // Force fresh data reload that bypasses cache
+          await loadFreshVendingData(true);
+          
+          // Additional timeout to ensure undercut detection uses fresh data
+          setTimeout(() => {
+            if (latestVending) {
+              renderMarketTracking(latestVending);
+            }
+          }, 200);
+          
         } catch (error) {
+          console.error('Error in updateOwnership:', error);
           elClaimFeedback.textContent = `Error: ${error.message}`;
         }
       }
@@ -1275,12 +2277,39 @@
       elClaimForm.addEventListener('submit', (event) => {
         event.preventDefault();
         const machineIdValue = elClaimMachineId.value.trim();
+        const machineNameValue = elClaimMachineName.value.trim();
+        
         if (!machineIdValue) {
           elClaimFeedback.textContent = 'Machine ID is required';
+          elClaimFeedback.style.color = '#f87171';
           return;
         }
+        
+        // Clear feedback
+        elClaimFeedback.textContent = '';
+        
         const payload = { machineId: machineIdValue };
         updateOwnership(payload);
+      });
+      
+      // Machine name form - clear machine ID when user types in machine name
+      elClaimMachineName.addEventListener('input', () => {
+        const nameValue = elClaimMachineName.value.trim();
+        if (nameValue === '') {
+          // Clear the machine ID if user clears the name field
+          if (elClaimMachineIdHint) {
+            elClaimMachineIdHint.className = 'validation-hint';
+            elClaimMachineIdHint.textContent = '';
+          }
+        }
+      });
+      
+      // Machine ID form - clear validation when user types
+      elClaimMachineId.addEventListener('input', () => {
+        if (elClaimFeedback.textContent.includes('required')) {
+          elClaimFeedback.textContent = '';
+          elClaimFeedback.style.color = '';
+        }
       });
 
       // Market Tracking functionality
@@ -1295,6 +2324,13 @@
       function matchesCurrencyFilter(currencyName) {
         if (currencyFilter.type === 'all') return true;
         if (currencyFilter.type === 'other') {
+          // When custom currency is selected, match exactly
+          if (currencyFilter.custom && currencyFilter.custom.trim() !== '') {
+            const normalizedInput = normalizeCurrency(currencyName);
+            const normalizedCustom = normalizeCurrency(currencyFilter.custom);
+            return normalizedInput === normalizedCustom;
+          }
+          // When no custom currency selected, exclude standard currencies (fallback behavior)
           const normalized = normalizeCurrency(currencyName);
           return normalized !== 'scrap' && normalized !== 'hqm';
         }
@@ -1306,56 +2342,117 @@
         const others = new Map();
         const ownedMachineIds = new Set(claimsMap.keys());
 
+        // Group others by item name for nested display
+        const othersByItem = new Map();
+
+        // Process vending machine offers
         for (const machine of vendingData.machines) {
           const isOwned = ownedMachineIds.has(String(machine.id));
           
           for (const order of machine.sellOrders) {
             if (!matchesCurrencyFilter(order.currencyName)) continue;
-            
-            const itemKey = `${order.itemId}|${order.itemName || ''}`;
-            const currencyKey = `${order.currencyId}|${order.currencyName || ''}`;
-            const offerKey = `${itemKey}|${currencyKey}`;
-            
-            const offerData = {
-              itemId: order.itemId,
-              itemName: order.itemName || `Item ${order.itemId}`,
-              currencyId: order.currencyId,
-              currencyName: order.currencyName || `${order.currencyId}`,
-              costPerItem: order.costPerItem,
-              totalStock: 0,
-              machineCount: 0,
-              machineIds: []
-            };
-
-            const targetMap = isOwned ? myOffers : others;
-            
-            if (!targetMap.has(offerKey)) {
-              targetMap.set(offerKey, { ...offerData });
+             
+            if (isOwned) {
+              // Keep individual offers for My Offers
+              const uniqueOfferKey = `${machine.id}|${order.itemId}|${order.currencyId}|${order.costPerItem}`;
+              
+              const offerData = {
+                itemId: order.itemId,
+                itemName: order.itemName || `Item ${order.itemId}`,
+                currencyId: order.currencyId,
+                currencyName: order.currencyName || `${order.currencyId}`,
+                costPerItem: order.costPerItem,
+                totalStock: order.amountInStock || 0,
+                machineCount: 1,
+                machineIds: [machine.id],
+                machineId: machine.id,
+                machineName: machine.name || `Vending Machine #${machine.id}`
+              };
+              
+              myOffers.set(uniqueOfferKey, offerData);
+            } else {
+              // Group others by item name
+              const itemName = order.itemName || `Item ${order.itemId}`;
+              
+              if (!othersByItem.has(itemName)) {
+                othersByItem.set(itemName, {
+                  itemName: itemName,
+                  itemId: order.itemId,
+                  offers: []
+                });
+              }
+              
+              othersByItem.get(itemName).offers.push({
+                currencyId: order.currencyId,
+                currencyName: order.currencyName || `${order.currencyId}`,
+                costPerItem: order.costPerItem,
+                totalStock: order.amountInStock || 0,
+                machineId: machine.id,
+                machineName: machine.name || `Vending Machine #${machine.id}`,
+                x: machine.x,
+                y: machine.y
+              });
             }
-            
-            const existing = targetMap.get(offerKey);
-            existing.totalStock += (order.amountInStock || 0);
-            existing.machineCount += 1;
-            existing.machineIds.push(machine.id);
           }
         }
 
-        return { myOffers, others };
+        // Add manual offers to My Offers
+        for (const manualOffer of manualOffers) {
+          if (!matchesCurrencyFilter(manualOffer.currencyName)) continue;
+          
+          const uniqueOfferKey = `manual|${manualOffer.itemId || manualOffer.id}|${manualOffer.currencyName}|${manualOffer.costPerItem}`;
+          
+          const offerData = {
+            itemId: manualOffer.itemId || manualOffer.id,
+            itemName: manualOffer.itemName || manualOffer.item,
+            currencyId: manualOffer.currencyName, // Manual offers use currency name as ID
+            currencyName: manualOffer.currencyName,
+            costPerItem: manualOffer.costPerItem || manualOffer.cost,
+            totalStock: manualOffer.amountInStock || manualOffer.stock || 0,
+            machineCount: 1,
+            machineIds: ['manual'],
+            machineId: 'manual',
+            machineName: 'Manual Entry',
+            isManual: true
+          };
+          
+          myOffers.set(uniqueOfferKey, offerData);
+        }
+
+        return { myOffers, others: othersByItem };
       }
 
       function renderMarketTracking(vendingData) {
         const { myOffers, others } = groupMarketData(vendingData);
         const hasOwnedMachines = claimsMap.size > 0;
 
-        // Show/hide manual entry based on ownership
-        elManualEntry.style.display = hasOwnedMachines ? 'none' : 'block';
+        // Always show manual entry for convenience, but highlight when no owned machines
+        elManualEntry.style.display = 'block';
+        const manualEntryMessage = elManualEntry.querySelector('.muted');
+        if (manualEntryMessage) {
+          if (!hasOwnedMachines) {
+            manualEntryMessage.textContent =
+              'No owned vending machines detected. Add manual offers to track your items.';
+          } else {
+            manualEntryMessage.textContent =
+              'Add manual offers to supplement your owned machine data.';
+          }
+        }
+
+        // Apply stock filtering to My Offers
+        let filteredMyOffers = myOffers;
+        if (!includeOutOfStockMyOffers) {
+          filteredMyOffers = new Map(Array.from(myOffers.entries()).filter(([key, offer]) =>
+            offer.totalStock > 0
+          ));
+        }
 
         // Render My Offers
-        if (myOffers.size === 0) {
-          elMyOffersBody.innerHTML = `<div class="muted">${hasOwnedMachines ? 'No items found in your owned machines.' : 'Your owned vending machines will populate this view.'}</div>`;
-          elMyOffersSummary.textContent = hasOwnedMachines ? 'No offers' : 'No offers yet';
+        if (filteredMyOffers.size === 0) {
+          elMyOffersBody.innerHTML = `<div class="muted">${hasOwnedMachines ? (includeOutOfStockMyOffers ? 'No items found in your owned machines.' : 'No in-stock items found in your owned machines.') : 'Your owned vending machines will populate this view.'}</div>`;
+          elMyOffersSummary.textContent = hasOwnedMachines ? (includeOutOfStockMyOffers ? 'No offers' : 'No in-stock offers') : 'No offers yet';
         } else {
-          const rows = Array.from(myOffers.values())
+          const rows = Array.from(filteredMyOffers.values())
             .sort((a, b) => a.itemName.localeCompare(b.itemName))
             .map(offer => `
               <div class="tracking-row">
@@ -1366,92 +2463,214 @@
               </div>
             `).join('');
           elMyOffersBody.innerHTML = rows;
-          elMyOffersSummary.textContent = `${myOffers.size} offers`;
+          elMyOffersSummary.textContent = includeOutOfStockMyOffers ? `${myOffers.size} offers` : `${filteredMyOffers.size}/${myOffers.size} in-stock`;
         }
 
         // Create Set of item names from "My Offers" for efficient matching
-        const myOfferItemNames = new Set(Array.from(myOffers.values()).map(offer => offer.itemName));
+        const myOfferItemNames = new Set(Array.from(filteredMyOffers.values()).map(offer => offer.itemName));
 
-        // Filter "Others" if toggle is enabled
-        let filteredOthers = others;
-        if (showOnlyMatchingItems && myOfferItemNames.size > 0) {
-          filteredOthers = new Map(Array.from(others.entries()).filter(([key, offer]) =>
-            myOfferItemNames.has(offer.itemName)
-          ));
+        // Apply filtering to Others (now grouped by item name)
+        let filteredOthers = new Map();
+        let totalOffers = 0;
+        let totalItems = 0;
+
+        for (const [itemName, itemGroup] of others.entries()) {
+          // Filter offers within each item group
+          let filteredOffers = itemGroup.offers;
+          
+          if (!includeOutOfStockOthers) {
+            filteredOffers = filteredOffers.filter(offer => offer.totalStock > 0);
+          }
+          
+          // Apply "Match my offers" filter
+          if (showOnlyMatchingItems && myOfferItemNames.size > 0) {
+            if (!myOfferItemNames.has(itemName)) {
+              continue; // Skip this item group entirely
+            }
+          }
+          
+          if (filteredOffers.length > 0) {
+            // Sort offers within each item by currency type and amount
+            filteredOffers.sort((a, b) => {
+              // First sort by currency name
+              const currencyCompare = a.currencyName.localeCompare(b.currencyName);
+              if (currencyCompare !== 0) return currencyCompare;
+              
+              // Then sort by cost (lowest first)
+              return a.costPerItem - b.costPerItem;
+            });
+            
+            filteredOthers.set(itemName, {
+              ...itemGroup,
+              offers: filteredOffers
+            });
+            
+            totalOffers += filteredOffers.length;
+            totalItems++;
+          }
         }
 
-        // Render Others with filtering
+        // Render Others with grouped items
         if (filteredOthers.size === 0) {
           let message = 'Other players\' sell orders appear here.';
-          if (showOnlyMatchingItems && others.size > 0) {
-            message = `No matching items found (${others.size} total offers)`;
+          const originalTotalOffers = Array.from(others.values()).reduce((sum, group) => sum + group.offers.length, 0);
+          
+          if (showOnlyMatchingItems && originalTotalOffers > 0) {
+            message = `No matching items found (${originalTotalOffers} total offers)`;
+          } else if (!includeOutOfStockOthers && originalTotalOffers > 0) {
+            message = `No in-stock items found (${originalTotalOffers} total offers)`;
           }
           elOthersBody.innerHTML = `<div class="muted">${message}</div>`;
-          elOthersSummary.textContent = showOnlyMatchingItems
-            ? `${filteredOthers.size}/${others.size} offers`
-            : `${others.size} offers`;
+          
+          elOthersSummary.textContent = showOnlyMatchingItems || !includeOutOfStockOthers
+            ? `${totalOffers}/${originalTotalOffers} offers`
+            : `${originalTotalOffers} offers`;
         } else {
-          const rows = Array.from(filteredOthers.values())
-            .sort((a, b) => a.itemName.localeCompare(b.itemName))
-            .map(offer => `
-              <div class="tracking-row">
-                <div class="tracking-row-details">
-                  <div>${offer.itemName}</div>
-                  <small>${offer.costPerItem} × ${offer.currencyName} · Stock: ${offer.totalStock} · ${offer.machineCount} machine${offer.machineCount !== 1 ? 's' : ''}</small>
+          const originalTotalOffers = Array.from(others.values()).reduce((sum, group) => sum + group.offers.length, 0);
+          
+          // Create expandable item groups
+          const itemGroups = Array.from(filteredOthers.entries())
+            .sort((a, b) => a[0].localeCompare(b[0])) // Sort by item name
+            .map(([itemName, itemGroup]) => {
+              const offerRows = itemGroup.offers.map(offer => `
+                <div class="offer-row">
+                  <div class="offer-row-details">
+                    <div>${offer.costPerItem} × ${offer.currencyName}</div>
+                    <small>Stock: ${offer.totalStock} · ${offer.machineName}</small>
+                  </div>
+                  <div class="offer-row-actions">
+                    ${offer.x != null && offer.y != null ?
+                      `<button type="button" class="focus-offer-btn" data-focus-offer-machine="${offer.machineId}">Focus</button>` :
+                      '<span class="muted" style="font-size: 11px;">No location</span>'
+                    }
+                  </div>
                 </div>
-              </div>
-            `).join('');
-          elOthersBody.innerHTML = rows;
-          elOthersSummary.textContent = showOnlyMatchingItems
-            ? `${filteredOthers.size}/${others.size} offers`
-            : `${filteredOthers.size} offers`;
+              `).join('');
+              
+              return `
+                <div class="item-group" data-item-name="${escapeHtml(itemName)}">
+                  <div class="item-group-header">
+                    <div class="item-name">${escapeHtml(itemName)}</div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="offer-count">${itemGroup.offers.length} offer${itemGroup.offers.length !== 1 ? 's' : ''}</span>
+                      <span class="item-group-chevron">▾</span>
+                    </div>
+                  </div>
+                  <div class="item-group-offers">
+                    ${offerRows}
+                  </div>
+                </div>
+              `;
+            }).join('');
+          
+          elOthersBody.innerHTML = itemGroups;
+          
+          elOthersSummary.textContent = showOnlyMatchingItems || !includeOutOfStockOthers
+            ? `${totalOffers}/${originalTotalOffers} offers`
+            : `${totalOffers} offers (${totalItems} items)`;
         }
 
-        // Check for undercuts if user has offers
-        if (myOffers.size > 0) {
-          checkForUndercuts(myOffers, filteredOthers);
-        }
+        // Always check for undercuts to ensure banner and title are properly updated
+        checkForUndercuts(filteredMyOffers, filteredOthers, vendingData);
       }
 
-      function checkForUndercuts(myOffers, others) {
+      function checkForUndercuts(myOffers, others, vendingData) {
         let hasUndercut = false;
         const undercutItems = [];
 
+        // Ensure claimsMap is up-to-date before checking
+        const ownedMachineIds = new Set(claimsMap.keys());
+
+        // Flatten the grouped others data back to individual offers for undercut checking
+        const allOtherOffers = [];
+        for (const [itemName, itemGroup] of others.entries()) {
+          for (const offer of itemGroup.offers) {
+            allOtherOffers.push({
+              ...offer,
+              itemName: itemName,
+              itemId: itemGroup.itemId
+            });
+          }
+        }
+
         for (const [offerKey, myOffer] of myOffers) {
-          const competingOffers = Array.from(others.values())
-            .filter(other =>
-              other.itemId === myOffer.itemId &&
-              other.currencyId === myOffer.currencyId &&
-              other.costPerItem < myOffer.costPerItem
-            )
+          const competingOffers = allOtherOffers
+            .filter(other => {
+              // Exclude offers from now-owned machines
+              const isFromOwnedMachine = ownedMachineIds.has(String(other.machineId));
+              const matchesItem = other.itemId === myOffer.itemId && other.currencyId === myOffer.currencyId;
+              const isCheaper = other.costPerItem < myOffer.costPerItem;
+              
+              return !isFromOwnedMachine && matchesItem && isCheaper;
+            })
             .sort((a, b) => a.costPerItem - b.costPerItem);
 
           if (competingOffers.length > 0) {
             hasUndercut = true;
             const bestCompetitor = competingOffers[0];
+            
             undercutItems.push({
               itemName: myOffer.itemName,
               myCost: myOffer.costPerItem,
               bestCost: bestCompetitor.costPerItem,
-              currencyName: myOffer.currencyName
+              currencyName: myOffer.currencyName,
+              bestMachineId: bestCompetitor.machineId,
+              bestMachineName: bestCompetitor.machineName || 'Unknown'
             });
           }
         }
 
+        // Enhanced rendering with banner
         if (hasUndercut) {
-          const warningText = undercutItems.map(item =>
-            `${item.itemName}: Your price ${item.myCost} × ${item.currencyName} - Best offer ${item.bestCost} × ${item.currencyName}`
-          ).join(' | ');
+          // Show the eye-catching banner
+          elUndercutBanner.style.display = 'block';
           
-          elTrackingWarning.textContent = `⚠️ Undercut Warning: ${warningText}`;
-          elTrackingWarning.style.display = 'block';
+          // Change page title to indicate undercut warning
+          document.title = '(!) UNDERCUT';
+          
+          const tableRows = undercutItems.map(item => {
+            const focusButton = item.bestMachineId
+              ? `<button type="button" class="focus-btn" data-focus-undercut-machine="${item.bestMachineId}">Focus on map</button>`
+              : '<span class="muted" style="font-size: 11px;">Location unknown</span>';
+            
+            return `
+              <tr>
+                <td class="your-offer">${item.itemName}<br><small style="color: #22c55e;">${item.myCost} × ${item.currencyName}</small></td>
+                <td class="best-offer">${item.bestCost} × ${item.currencyName}</td>
+                <td>${focusButton}</td>
+              </tr>
+            `;
+          }).join('');
+          
+          elTrackingWarning.style.display = 'none'; // Hide the old warning
+          elTrackingWarningTable.innerHTML = `
+            <table class="undercut-table">
+              <thead>
+                <tr>
+                  <th>Your Offer</th>
+                  <th>Best Offer</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRows}
+              </tbody>
+            </table>
+          `;
+          elTrackingWarningTable.style.display = 'block';
           
           // Play chime sound
           chimeAudio.play().catch(() => {
             // Ignore audio playback errors
           });
         } else {
+          // Hide both banner and table when no undercuts
+          elUndercutBanner.style.display = 'none';
           elTrackingWarning.style.display = 'none';
+          elTrackingWarningTable.style.display = 'none';
+          
+          // Revert page title to default
+          document.title = 'RustMarket Tracker';
         }
       }
 
@@ -1477,37 +2696,214 @@
         }
       }
 
+      // Enhanced Validation Functions
+      function validateManualOfferForm() {
+        let isValid = true;
+        
+        // Validate item
+        const itemValue = elManualItem.value.trim();
+        if (!itemValue) {
+          showFieldError(elManualItemError, 'Item is required');
+          isValid = false;
+        } else {
+          const selectedItem = itemAutocomplete?.getSelectedItem();
+          if (!selectedItem || selectedItem.name !== itemValue) {
+            showFieldError(elManualItemError, 'Please select a valid item from the search results');
+            isValid = false;
+          } else {
+            hideFieldError(elManualItemError);
+          }
+        }
+        
+        // Validate currency
+        const currencyValue = elManualCurrency.value.trim();
+        if (!currencyValue) {
+          showFieldError(elManualCurrencyError, 'Currency is required');
+          isValid = false;
+        } else {
+          const selectedCurrency = currencyAutocomplete?.getSelectedItem();
+          if (!selectedCurrency || selectedCurrency.name !== currencyValue) {
+            showFieldError(elManualCurrencyError, 'Please select a valid currency');
+            isValid = false;
+          } else {
+            hideFieldError(elManualCurrencyError);
+          }
+        }
+        
+        // Validate cost
+        const costValue = parseFloat(elManualCost.value);
+        if (isNaN(costValue) || costValue < 0) {
+          showFieldError(elManualCostError, 'Cost must be a positive number');
+          isValid = false;
+        } else if (costValue > 1000000) {
+          showFieldError(elManualCostError, 'Cost seems unusually high');
+          isValid = false;
+        } else {
+          hideFieldError(elManualCostError);
+        }
+        
+        // Validate stock (optional)
+        const stockValue = parseInt(elManualStock.value) || 0;
+        if (stockValue < 0) {
+          showFieldError(elManualStockError, 'Stock cannot be negative');
+          isValid = false;
+        } else if (stockValue > 100000) {
+          showFieldError(elManualStockError, 'Stock seems unusually high');
+          isValid = false;
+        } else {
+          hideFieldError(elManualStockError);
+        }
+        
+        return isValid;
+      }
+      
+      function showFieldError(errorElement, message) {
+        if (errorElement) {
+          errorElement.textContent = message;
+          errorElement.classList.add('active');
+        }
+      }
+      
+      function hideFieldError(errorElement) {
+        if (errorElement) {
+          errorElement.classList.remove('active');
+          errorElement.textContent = '';
+        }
+      }
+      
+      function clearAllFieldErrors() {
+        [elManualItemError, elManualCurrencyError, elManualCostError, elManualStockError, elClaimMachineNameError, elTrackingCurrencyOtherError].forEach(el => {
+          if (el) hideFieldError(el);
+        });
+        
+        [elManualItemHint, elManualCurrencyHint, elManualCostHint, elManualStockHint, elClaimMachineNameHint, elClaimMachineIdHint].forEach(el => {
+          if (el) {
+            el.classList.remove('success', 'error');
+            el.textContent = '';
+          }
+        });
+        
+        // Also reset the checkmark
+        const checkmark = document.getElementById('trackingCurrencyOtherCheckmark');
+        if (checkmark) {
+          checkmark.style.opacity = '0';
+        }
+      }
+      
       function addManualOffer() {
-        const item = elManualItem.value.trim();
-        const currency = elManualCurrency.value.trim();
-        const cost = parseFloat(elManualCost.value);
-        const stock = parseInt(elManualStock.value) || 0;
-
-        if (!item || !currency || isNaN(cost) || cost < 0) {
-          elClaimFeedback.textContent = 'Please fill in all manual offer fields correctly.';
+        clearAllFieldErrors();
+        
+        if (!validateManualOfferForm()) {
           return;
         }
-
+        
+        const itemValue = elManualItem.value.trim();
+        const currencyValue = elManualCurrency.value.trim();
+        const costValue = parseFloat(elManualCost.value);
+        const stockValue = parseInt(elManualStock.value) || 0;
+        
+        // Get detailed item information from search index
+        const itemData = searchIndex.find(entry =>
+          (entry.item || entry.itemName) === itemValue
+        );
+        
         const offer = {
           id: Date.now().toString(),
-          item,
-          currency,
-          cost,
-          stock,
-          addedAt: new Date().toISOString()
+          itemId: itemData?.itemId || null,
+          itemName: itemValue,
+          currencyName: currencyValue,
+          costPerItem: costValue,
+          amountInStock: stockValue,
+          totalStock: stockValue,
+          machineCount: 1,
+          machineIds: ['manual'],
+          machineId: 'manual',
+          machineName: 'Manual Entry',
+          addedAt: new Date().toISOString(),
+          isManual: true
         };
-
+        
         manualOffers.push(offer);
         saveManualOffers();
         
         // Clear form
+        clearManualForm();
+        
+        // Refresh display
+        renderManualOffers();
+        
+        // Show success message
+        elClaimFeedback.textContent = `✓ Added manual offer: ${itemValue}`;
+        elClaimFeedback.style.color = '#22c55e';
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          elClaimFeedback.textContent = '';
+          elClaimFeedback.style.color = '';
+        }, 3000);
+      }
+      
+      function clearManualForm() {
         elManualItem.value = '';
         elManualCurrency.value = '';
         elManualCost.value = '';
         elManualStock.value = '';
-
-        // Refresh display
-        renderManualOffers();
+        
+        // Reset autocomplete states
+        if (itemAutocomplete) {
+          itemAutocomplete.reset();
+        }
+        if (currencyAutocomplete) {
+          currencyAutocomplete.reset();
+        }
+        
+        clearAllFieldErrors();
+      }
+      
+      // Clear claim form function
+      function clearClaimForm() {
+        elClaimMachineName.value = '';
+        elClaimMachineId.value = '';
+        
+        // Reset autocomplete states
+        if (machineNameAutocomplete) {
+          machineNameAutocomplete.reset();
+        }
+        
+        // Clear validation hints
+        if (elClaimMachineNameHint) {
+          elClaimMachineNameHint.className = 'validation-hint';
+          elClaimMachineNameHint.textContent = '';
+        }
+        if (elClaimMachineIdHint) {
+          elClaimMachineIdHint.className = 'validation-hint';
+          elClaimMachineIdHint.textContent = '';
+        }
+        
+        clearAllFieldErrors();
+      }
+      
+      // Quick add functionality
+      function handleQuickAdd(itemName, currencyName) {
+        elManualItem.value = itemName;
+        elManualCurrency.value = currencyName;
+        
+        // Trigger validation highlights
+        setTimeout(() => {
+          const mockItem = { name: itemName };
+          const mockCurrency = { name: currencyName };
+          
+          if (validateItemSelection(mockItem)) {
+            itemAutocomplete.selectedItem = mockItem;
+          }
+          
+          if (validateCurrencySelection(mockCurrency)) {
+            currencyAutocomplete.selectedItem = mockCurrency;
+          }
+        }, 100);
+        
+        // Focus on cost field
+        elManualCost.focus();
       }
 
       function renderManualOffers() {
@@ -1518,12 +2914,12 @@
         }
 
         const rows = manualOffers
-          .sort((a, b) => a.item.localeCompare(b.item))
+          .sort((a, b) => (a.itemName || a.item).localeCompare(b.itemName || b.item))
           .map(offer => `
-            <div class="tracking-row">
+            <div class="tracking-row" style="border-left: 3px solid #22c55e;">
               <div class="tracking-row-details">
-                <div>${offer.item}</div>
-                <small>${offer.cost} × ${offer.currency} · Stock: ${offer.stock}</small>
+                <div>${offer.itemName || offer.item}</div>
+                <small>${offer.costPerItem || offer.cost} × ${offer.currencyName || offer.currency} · Stock: ${offer.amountInStock || offer.stock} · Manual entry</small>
               </div>
               <div class="tracking-row-actions">
                 <button type="button" onclick="removeManualOffer('${offer.id}')" style="background:#ef444;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:11px;">Remove</button>
@@ -1532,7 +2928,7 @@
           `).join('');
         
         elMyOffersBody.innerHTML = rows;
-        elMyOffersSummary.textContent = `${manualOffers.length} manual offers`;
+        elMyOffersSummary.textContent = `${manualOffers.length} manual offer${manualOffers.length !== 1 ? 's' : ''}`;
 
         // Add clear all button if there are offers
         if (manualOffers.length > 0) {
@@ -1563,15 +2959,30 @@
         }
       }
 
-      // Currency filter handling
+      // Currency filter handling with smart lookup
       elTrackingCurrency.addEventListener('change', () => {
         const value = elTrackingCurrency.value;
         if (value === 'other') {
-          elTrackingCurrencyOther.style.display = 'block';
+          elTrackingCurrencyOtherContainer.style.display = 'block';
+          elTrackingCurrencyOther.focus();
           currencyFilter = { type: 'other', custom: elTrackingCurrencyOther.value.trim() };
+          
+          // Reset autocomplete when opened
+          if (trackingCurrencyAutocomplete) {
+            trackingCurrencyAutocomplete.reset();
+          }
         } else {
-          elTrackingCurrencyOther.style.display = 'none';
+          elTrackingCurrencyOtherContainer.style.display = 'none';
           currencyFilter = { type: value, custom: '' };
+          
+          // Reset validation hints
+          const checkmark = document.getElementById('trackingCurrencyOtherCheckmark');
+          if (checkmark) {
+            checkmark.style.opacity = '0';
+          }
+          if (trackingCurrencyAutocomplete) {
+            trackingCurrencyAutocomplete.reset();
+          }
         }
         
         if (latestVending) {
@@ -1579,33 +2990,102 @@
         }
       });
 
+      // Enhanced currency other input handling with autocomplete integration
       elTrackingCurrencyOther.addEventListener('input', () => {
-        currencyFilter.custom = elTrackingCurrencyOther.value.trim();
+        const customValue = elTrackingCurrencyOther.value.trim();
+        currencyFilter.custom = customValue;
+        
+        // Clear validation on input change
+        if (customValue === '') {
+          const checkmark = document.getElementById('trackingCurrencyOtherCheckmark');
+          if (checkmark) {
+            checkmark.style.opacity = '0';
+          }
+        }
+        
         if (latestVending) {
           renderMarketTracking(latestVending);
         }
       });
 
-      // Manual offer submission
+      // Enhanced Manual offer event listeners
       if (elManualAdd) {
-        console.log('DEBUG: Adding event listener to elManualAdd');
         elManualAdd.addEventListener('click', addManualOffer);
-      } else {
-        console.error('DEBUG: elManualAdd is null, cannot add event listener');
+      }
+      
+      if (elManualClear) {
+        elManualClear.addEventListener('click', clearManualForm);
+      }
+      
+      // Quick add event listeners
+      if (elQuickAddChips) {
+        elQuickAddChips.addEventListener('click', (e) => {
+          const chip = e.target.closest('.quick-add-chip');
+          if (chip) {
+            const itemName = chip.dataset.item;
+            const currencyName = chip.dataset.currency;
+            handleQuickAdd(itemName, currencyName);
+          }
+        });
+      }
+      
+      // Input validation listeners
+      if (elManualCost) {
+        elManualCost.addEventListener('input', () => {
+          const cost = parseFloat(elManualCost.value);
+          if (!isNaN(cost) && cost >= 0) {
+            hideFieldError(elManualCostError);
+            if (cost > 0) {
+              elManualCostHint.textContent = '';
+              elManualCostHint.classList.remove('error');
+            }
+          }
+        });
+      }
+      
+      if (elManualStock) {
+        elManualStock.addEventListener('input', () => {
+          const stock = parseInt(elManualStock.value);
+          if (!isNaN(stock) && stock >= 0) {
+            hideFieldError(elManualStockError);
+          }
+        });
       }
 
       // Make functions globally accessible
       window.removeManualOffer = removeManualOffer;
       window.clearAllManualOffers = clearAllManualOffers;
+      
+      // Initialize autocompletes when page loads
+      document.addEventListener('DOMContentLoaded', () => {
+        if (searchIndex.length > 0) {
+          initializeAutocompletes();
+        }
+      });
 
       // Refresh tracking button
-      elTrackingRefresh.addEventListener('click', () => {
+      elTrackingRefresh.addEventListener('click', async () => {
+        await loadFreshVendingData();
+      });
+
+      // Event listeners for stock filter toggles
+      elMyOffersStockToggle.addEventListener('change', () => {
+        includeOutOfStockMyOffers = elMyOffersStockToggle.checked;
+        saveFilterState();
         if (latestVending) {
           renderMarketTracking(latestVending);
         }
       });
 
-      // Event listener for toggle
+      elOthersStockToggle.addEventListener('change', () => {
+        includeOutOfStockOthers = elOthersStockToggle.checked;
+        saveFilterState();
+        if (latestVending) {
+          renderMarketTracking(latestVending);
+        }
+      });
+
+      // Event listener for matching filter toggle
       elOthersFilterToggle.addEventListener('change', () => {
         showOnlyMatchingItems = elOthersFilterToggle.checked;
         saveFilterState();
@@ -1630,6 +3110,21 @@
           focusMachineOnMap(focusButton.dataset.focusMachine);
           return;
         }
+        
+        const focusUndercutButton = event.target.closest('[data-focus-undercut-machine]');
+        if (focusUndercutButton) {
+          event.preventDefault();
+          focusMachineOnMap(focusUndercutButton.dataset.focusUndercutMachine);
+          return;
+        }
+        
+        const focusOfferButton = event.target.closest('[data-focus-offer-machine]');
+        if (focusOfferButton) {
+          event.preventDefault();
+          focusMachineOnMap(focusOfferButton.dataset.focusOfferMachine);
+          return;
+        }
+        
         const claimButton = event.target.closest('[data-claim-machine]');
         if (claimButton) {
           event.preventDefault();
@@ -1640,6 +3135,23 @@
           elClaimFeedback.textContent = '';
           const payload = claim ? { machineId, release: true } : { machineId };
           updateOwnership(payload);
+          return;
+        }
+        
+        // Handle item group expand/collapse
+        const itemGroupHeader = event.target.closest('.item-group-header');
+        if (itemGroupHeader) {
+          event.preventDefault();
+          const itemGroup = itemGroupHeader.closest('.item-group');
+          if (itemGroup) {
+            const isExpanded = itemGroup.classList.contains('expanded');
+            if (isExpanded) {
+              itemGroup.classList.remove('expanded');
+            } else {
+              itemGroup.classList.add('expanded');
+            }
+          }
+          return;
         }
       });
 
@@ -1682,9 +3194,8 @@
           renderMarkers(data);
           buildSearchIndex(data);
           renderSearchResults(elSearch.value);
-          loadClaims();
+          await loadClaims();
           renderMarketTracking(data);
-          updateManualItemList(searchIndex);
         } catch (error) {
           showError(error.message || String(error));
           elStatus.textContent = 'Failed to load';
@@ -1700,7 +3211,20 @@
       renderManualOffers();
       loadFilterState();
       
-      Promise.all([loadMap().then(() => load())]);
+      Promise.all([loadMap().then(() => {
+        load().then(() => {
+          // Initialize autocompletes after data is loaded
+            if (searchIndex.length > 0 && !itemAutocomplete) {
+              initializeAutocompletes();
+            }
+            
+            // Also initialize machine name autocomplete if vending data is available
+            if (latestVending && latestVending.machines && !machineNameAutocomplete) {
+              // Re-initialize to include machine name and tracking currency autocompletes
+              initializeAutocompletes();
+            }
+        });
+      })]);
       setInterval(load, 30000);
 
       // Auto-refresh market tracking every 30 seconds
@@ -1709,6 +3233,257 @@
           renderMarketTracking(latestVending);
         }
       }, 30000);
+      
+      // COMPREHENSIVE TESTING FUNCTION
+      window.runComprehensiveTests = async function() {
+        console.log('🧪 STARTING COMPREHENSIVE TESTS FOR RUST MARKETS FIXES');
+        const testResults = {
+          fix1: { name: 'Owned Machines Panel Height', status: 'pending', issues: [], successes: [] },
+          fix2: { name: 'Manual Offer Form Redesign', status: 'pending', issues: [], successes: [] },
+          fix3: { name: 'Smart Currency Lookup UI Alignment', status: 'pending', issues: [], successes: [] },
+          fix4: { name: 'Smart Currency Lookup Functionality', status: 'pending', issues: [], successes: [] },
+          integration: { name: 'Market Tracking Integration', status: 'pending', issues: [], successes: [] }
+        };
+        
+        // TEST FIX 1: Owned Machines Panel Height
+        console.log('📏 Testing Fix 1: Owned Machines Panel Height');
+        try {
+          const sidebar = document.querySelector('.sidebar');
+          const panel = document.querySelector('.panel');
+          const panelList = document.querySelector('.panel-list');
+          
+          // Test 1.1: Check if sidebar has proper height styles
+          if (sidebar) {
+            const computedStyle = window.getComputedStyle(sidebar);
+            const hasHeight = computedStyle.height && computedStyle.height.includes('vh');
+            const hasMaxHeight = computedStyle.maxHeight && computedStyle.maxHeight.includes('vh');
+            
+            if (hasHeight && hasMaxHeight) {
+              testResults.fix1.successes.push('✅ Sidebar has proper viewport-relative height');
+              console.log('✅ Sidebar height test passed');
+            } else {
+              testResults.fix1.issues.push('❌ Sidebar missing proper viewport height styles');
+              console.log('❌ Sidebar height test failed');
+            }
+            
+            // Test 1.2: Check sticky positioning
+            if (computedStyle.position === 'sticky') {
+              testResults.fix1.successes.push('✅ Sidebar has sticky positioning');
+              console.log('✅ Sticky positioning test passed');
+            } else {
+              testResults.fix1.issues.push('❌ Sidebar missing sticky positioning');
+              console.log('❌ Sticky positioning test failed');
+            }
+          } else {
+            testResults.fix1.issues.push('❌ Sidebar element not found');
+          }
+          
+          testResults.fix1.status = testResults.fix1.issues.length === 0 ? 'passed' : 'failed';
+          
+        } catch (error) {
+          testResults.fix1.status = 'error';
+          testResults.fix1.issues.push(`❌ Error testing Fix 1: ${error.message}`);
+        }
+        
+        // TEST FIX 2: Manual Offer Form Redesign
+        console.log('🔍 Testing Fix 2: Manual Offer Form Redesign');
+        try {
+          // Test 2.1: Check if autocomplete classes exist
+          if (typeof SmartAutocomplete !== 'undefined') {
+            testResults.fix2.successes.push('✅ SmartAutocomplete class is defined');
+            console.log('✅ SmartAutocomplete class test passed');
+          } else {
+            testResults.fix2.issues.push('❌ SmartAutocomplete class not found');
+          }
+          
+          // Test 2.2: Check if autocomplete instances are initialized
+          if (itemAutocomplete && currencyAutocomplete) {
+            testResults.fix2.successes.push('✅ Autocomplete instances are initialized');
+            console.log('✅ Autocomplete instances test passed');
+          } else {
+            testResults.fix2.issues.push('❌ Autocomplete instances not initialized');
+            console.log('❌ Autocomplete instances test failed', { itemAutocomplete, currencyAutocomplete });
+          }
+          
+          // Test 2.3: Test fuzzy search function
+          if (typeof fuzzySearch === 'function') {
+            const testItems = [
+              { name: 'Scrap', details: 'Common material' },
+              { name: 'High Quality Metal', details: 'Rare material' }
+            ];
+            const searchResults = fuzzySearch('scr', testItems, ['name', 'details']);
+            if (searchResults.length > 0) {
+              testResults.fix2.successes.push('✅ Fuzzy search function working');
+              console.log('✅ Fuzzy search test passed', searchResults);
+            } else {
+              testResults.fix2.issues.push('❌ Fuzzy search not returning results');
+            }
+          } else {
+            testResults.fix2.issues.push('❌ Fuzzy search function not defined');
+          }
+          
+          testResults.fix2.status = testResults.fix2.issues.length === 0 ? 'passed' : 'failed';
+          
+        } catch (error) {
+          testResults.fix2.status = 'error';
+          testResults.fix2.issues.push(`❌ Error testing Fix 2: ${error.message}`);
+        }
+        
+        // TEST FIX 3: Smart Currency Lookup UI Alignment
+        console.log('🎨 Testing Fix 3: Smart Currency Lookup UI Alignment');
+        try {
+          const trackingFilter = document.querySelector('.tracking-filter');
+          const trackingFilterRow = document.querySelector('.tracking-filter-row');
+          const currencySelect = document.getElementById('trackingCurrency');
+          const currencyOtherContainer = document.getElementById('trackingCurrencyOtherContainer');
+          
+          // Test 3.1: Check if tracking filter has proper flex layout
+          if (trackingFilter && window.getComputedStyle(trackingFilter).display === 'flex') {
+            testResults.fix3.successes.push('✅ Tracking filter has flex layout');
+            console.log('✅ Tracking filter flex layout test passed');
+          } else {
+            testResults.fix3.issues.push('❌ Tracking filter missing proper flex layout');
+            console.log('❌ Tracking filter flex layout test failed');
+          }
+          
+          // Test 3.2: Check if tracking filter row exists and has proper alignment
+          if (trackingFilterRow) {
+            const rowStyle = window.getComputedStyle(trackingFilterRow);
+            if (rowStyle.display === 'flex' && rowStyle.alignItems === 'center') {
+              testResults.fix3.successes.push('✅ Filter row has proper flex alignment');
+              console.log('✅ Filter row alignment test passed');
+            } else {
+              testResults.fix3.issues.push('❌ Filter row missing proper flex alignment');
+              console.log('❌ Filter row alignment test failed');
+            }
+          } else {
+            testResults.fix3.issues.push('❌ Tracking filter row not found');
+          }
+          
+          // Test 3.3: Check if autocomplete container has proper sizing
+          if (currencyOtherContainer) {
+            const containerStyle = window.getComputedStyle(currencyOtherContainer);
+            if (containerStyle.flex === '1 1 0%' || containerStyle.flex === '1') {
+              testResults.fix3.successes.push('✅ Autocomplete container has flex sizing');
+              console.log('✅ Autocomplete container sizing test passed');
+            } else {
+              testResults.fix3.issues.push('❌ Autocomplete container missing proper flex sizing');
+              console.log('❌ Autocomplete container sizing test failed');
+            }
+          } else {
+            testResults.fix3.issues.push('❌ Currency other container not found');
+          }
+          
+          testResults.fix3.status = testResults.fix3.issues.length === 0 ? 'passed' : 'failed';
+          
+        } catch (error) {
+          testResults.fix3.status = 'error';
+          testResults.fix3.issues.push(`❌ Error testing Fix 3: ${error.message}`);
+        }
+        
+        // TEST FIX 4: Smart Currency Lookup Functionality
+        console.log('💰 Testing Fix 4: Smart Currency Lookup Functionality');
+        try {
+          // Test 4.1: Check if tracking currency autocomplete is initialized
+          if (trackingCurrencyAutocomplete) {
+            testResults.fix4.successes.push('✅ Tracking currency autocomplete is initialized');
+            console.log('✅ Tracking currency autocomplete initialization test passed');
+          } else {
+            testResults.fix4.issues.push('❌ Tracking currency autocomplete not initialized');
+            console.log('❌ Tracking currency autocomplete initialization test failed');
+          }
+          
+          // Test 4.2: Test currency filter functionality
+          const originalFilter = { ...currencyFilter };
+          
+          // Test "Other" selection
+          elTrackingCurrency.value = 'other';
+          elTrackingCurrency.dispatchEvent(new Event('change'));
+          
+          setTimeout(() => {
+            if (elTrackingCurrencyOtherContainer.style.display !== 'none') {
+              testResults.fix4.successes.push('✅ Currency other container appears on selection');
+              console.log('✅ Currency other container appearance test passed');
+            } else {
+              testResults.fix4.issues.push('❌ Currency other container does not appear on selection');
+              console.log('❌ Currency other container appearance test failed');
+            }
+            
+            // Test "All" selection
+            elTrackingCurrency.value = 'all';
+            elTrackingCurrency.dispatchEvent(new Event('change'));
+            
+            setTimeout(() => {
+              if (elTrackingCurrencyOtherContainer.style.display === 'none') {
+                testResults.fix4.successes.push('✅ Currency other container hides on other selection');
+                console.log('✅ Currency other container hiding test passed');
+              } else {
+                testResults.fix4.issues.push('❌ Currency other container does not hide on other selection');
+                console.log('❌ Currency other container hiding test failed');
+              }
+              
+              // Test 4.3: Test matchesCurrencyFilter function
+              const testCases = [
+                { type: 'all', custom: '', input: 'Scrap', expected: true },
+                { type: 'scrap', custom: '', input: 'Scrap', expected: true },
+                { type: 'scrap', custom: '', input: 'HQM', expected: false },
+                { type: 'other', custom: 'Metal Fragments', input: 'Metal Fragments', expected: true },
+                { type: 'other', custom: 'Metal Fragments', input: 'Wood', expected: false }
+              ];
+              
+              let filterTestsPassed = 0;
+              testCases.forEach(testCase => {
+                currencyFilter = { type: testCase.type, custom: testCase.custom };
+                const result = matchesCurrencyFilter(testCase.input);
+                if (result === testCase.expected) {
+                  filterTestsPassed++;
+                } else {
+                  testResults.fix4.issues.push(`❌ Filter test failed: ${testCase.type}/${testCase.custom} -> ${testCase.input} expected ${testCase.expected}, got ${result}`);
+                }
+              });
+              
+              if (filterTestsPassed === testCases.length) {
+                testResults.fix4.successes.push('✅ All currency filter tests passed');
+                console.log('✅ Currency filter logic tests passed');
+              }
+              
+              // Restore original filter
+              currencyFilter = originalFilter;
+              testResults.fix4.status = testResults.fix4.issues.length === 0 ? 'passed' : 'failed';
+              
+            }, 100);
+          }, 100);
+          
+        } catch (error) {
+          testResults.fix4.status = 'error';
+          testResults.fix4.issues.push(`❌ Error testing Fix 4: ${error.message}`);
+        }
+        
+        // Generate comprehensive report
+        console.log('📊 COMPREHENSIVE TEST RESULTS:');
+        console.group('Test Results Summary');
+        
+        Object.entries(testResults).forEach(([key, results]) => {
+          console.log(`${results.name}: ${results.status.toUpperCase()}`);
+          if (results.successes.length > 0) {
+            results.successes.forEach(success => console.log(`  ${success}`));
+          }
+          if (results.issues.length > 0) {
+            results.issues.forEach(issue => console.log(`  ${issue}`));
+          }
+        });
+        
+        console.groupEnd();
+        
+        // Return results for programmatic access
+        return testResults;
+      };
+      
+      // Auto-run tests when page loads (after a delay to ensure everything is initialized)
+      setTimeout(() => {
+        console.log('🚀 Auto-running comprehensive tests...');
+        window.runComprehensiveTests();
+      }, 3000);
     </script>
   </body>
 </html>
